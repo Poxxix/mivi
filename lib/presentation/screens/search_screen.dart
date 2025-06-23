@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mivi/data/mock_data/mock_movies.dart';
 import 'package:mivi/data/models/movie_model.dart';
-import 'package:mivi/presentation/widgets/search_bar.dart' as custom;
 import 'package:mivi/presentation/widgets/movie_list.dart';
 import 'package:mivi/presentation/core/app_colors.dart';
 
@@ -95,7 +94,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: IconButton(
-                              icon: Icon(
+                              icon: const Icon(
                                 Icons.arrow_back_rounded,
                                 color: AppColors.onBackground,
                               ),
@@ -103,7 +102,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                             ),
                           ),
                           const SizedBox(width: 16),
-                          Text(
+                          const Text(
                             'Search Movies',
                             style: TextStyle(
                               color: AppColors.onBackground,
@@ -125,14 +124,14 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                         ),
                         child: TextField(
                           controller: _controller,
-                          style: TextStyle(color: AppColors.onBackground),
+                          style: const TextStyle(color: AppColors.onBackground),
                           autofocus: true,
                           decoration: InputDecoration(
                             hintText: 'Search for movies...',
                             hintStyle: TextStyle(
                               color: AppColors.onBackground.withOpacity(0.5),
                             ),
-                            prefixIcon: Icon(
+                            prefixIcon: const Icon(
                               Icons.search_rounded,
                               color: AppColors.primary,
                               size: 24,
@@ -198,14 +197,14 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                   color: AppColors.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.movie_filter_outlined,
                   size: 64,
                   color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 24),
-              Text(
+              const Text(
                 'Discover Movies',
                 style: TextStyle(
                   color: AppColors.onBackground,
@@ -251,7 +250,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                 ),
               ),
               const SizedBox(height: 24),
-              Text(
+              const Text(
                 'No Results Found',
                 style: TextStyle(
                   color: AppColors.onBackground,
@@ -285,7 +284,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.movie_outlined,
                   color: AppColors.primary,
                   size: 20,

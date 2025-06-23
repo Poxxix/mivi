@@ -92,7 +92,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> with SingleTickerProv
                           color: AppColors.error.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.favorite,
                           color: AppColors.error,
                           size: 24,
@@ -103,7 +103,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> with SingleTickerProv
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
+                          const Text(
                             'Favorites',
                             style: TextStyle(
                               color: AppColors.onBackground,
@@ -173,14 +173,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> with SingleTickerProv
                 color: AppColors.error.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.favorite_border_outlined,
                 size: 80,
                 color: AppColors.error,
               ),
             ),
             const SizedBox(height: 32),
-            Text(
+            const Text(
               'No Favorites Yet',
               style: TextStyle(
                 color: AppColors.onBackground,

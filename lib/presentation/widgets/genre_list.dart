@@ -22,10 +22,14 @@ class GenreList extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: genres.length,
+        physics: const BouncingScrollPhysics(),
         itemBuilder: (context, index) {
           final genre = genres[index];
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: EdgeInsets.only(
+              right: 8,
+              left: index == 0 ? 4 : 0,
+            ),
             child: GenreChip(
               genre: genre,
               isSelected: selectedGenre?.id == genre.id,

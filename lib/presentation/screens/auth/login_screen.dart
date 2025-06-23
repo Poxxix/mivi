@@ -90,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           color: AppColors.primary.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.movie_creation_outlined,
                           size: 64,
                           color: AppColors.primary,
@@ -124,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         decoration: InputDecoration(
                           labelText: 'Email',
                           labelStyle: TextStyle(color: AppColors.onBackground.withOpacity(0.7)),
-                          prefixIcon: Icon(Icons.email_outlined, color: AppColors.primary),
+                          prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
                           filled: true,
                           fillColor: AppColors.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
@@ -139,21 +139,21 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
+                            borderSide: const BorderSide(
                               color: AppColors.primary,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
+                            borderSide: const BorderSide(
                               color: AppColors.error,
                               width: 2,
                             ),
                           ),
                           focusedErrorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
+                            borderSide: const BorderSide(
                               color: AppColors.error,
                               width: 2,
                             ),
@@ -178,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         decoration: InputDecoration(
                           labelText: 'Password',
                           labelStyle: TextStyle(color: AppColors.onBackground.withOpacity(0.7)),
-                          prefixIcon: Icon(Icons.lock_outline, color: AppColors.primary),
+                          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
                           filled: true,
                           fillColor: AppColors.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
@@ -193,21 +193,21 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
+                            borderSide: const BorderSide(
                               color: AppColors.primary,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
+                            borderSide: const BorderSide(
                               color: AppColors.error,
                               width: 2,
                             ),
                           ),
                           focusedErrorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
+                            borderSide: const BorderSide(
                               color: AppColors.error,
                               width: 2,
                             ),
@@ -280,10 +280,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             style: TextStyle(
                               color: AppColors.onBackground.withOpacity(0.7),
                             ),
-                            children: [
+                            children: const [
                               TextSpan(
                                 text: 'Register',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.primary,
                                   fontWeight: FontWeight.bold,
                                 ),

@@ -10,15 +10,14 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.accent,
-        background: AppColors.background,
         surface: AppColors.surface,
         error: AppColors.error,
       ),
       scaffoldBackgroundColor: AppColors.background,
-      cardTheme: CardThemeData(
+      cardTheme: const CardThemeData(
         color: AppColors.card,
         elevation: 0,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),

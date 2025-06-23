@@ -60,7 +60,7 @@ class MockMovies {
       budget: 160000000,
       revenue: 825532764,
       cast: mockCast,
-      similarMovies: [],
+      similarMovies: const [],
     ),
     Movie(
       id: 2,
@@ -78,7 +78,7 @@ class MockMovies {
       budget: 185000000,
       revenue: 1004558444,
       cast: mockCast,
-      similarMovies: [],
+      similarMovies: const [],
     ),
     Movie(
       id: 3,
@@ -96,7 +96,7 @@ class MockMovies {
       budget: 8000000,
       revenue: 213928762,
       cast: mockCast,
-      similarMovies: [],
+      similarMovies: const [],
     ),
     Movie(
       id: 4,
@@ -114,7 +114,7 @@ class MockMovies {
       budget: 25000000,
       revenue: 28341469,
       cast: mockCast,
-      similarMovies: [],
+      similarMovies: const [],
     ),
     Movie(
       id: 5,
@@ -132,7 +132,7 @@ class MockMovies {
       budget: 63000000,
       revenue: 463517383,
       cast: mockCast,
-      similarMovies: [],
+      similarMovies: const [],
     ),
   ];
 

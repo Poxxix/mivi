@@ -88,6 +88,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
                 title: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
@@ -95,20 +96,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         color: AppColors.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.movie_creation_outlined,
                         color: AppColors.primary,
                         size: 24,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Text(
-                      'Mivi',
-                      style: TextStyle(
-                        color: AppColors.onBackground,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
-                        letterSpacing: 0.5,
+                    const Flexible(
+                      child: Text(
+                        'Mivi',
+                        style: TextStyle(
+                          color: AppColors.onBackground,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          letterSpacing: 0.5,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -121,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.search_rounded,
                         color: AppColors.onBackground,
                         size: 24,
@@ -146,16 +150,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Discover amazing movies',
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: AppColors.onBackground,
-                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          height: 1.2,
+                        ) ?? const TextStyle(
+                          color: AppColors.onBackground,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                           height: 1.2,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -169,8 +181,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
                         child: Text(
                           'Browse by Genre',
                           style: TextStyle(

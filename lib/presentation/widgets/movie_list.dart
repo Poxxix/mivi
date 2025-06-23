@@ -40,6 +40,7 @@ class MovieList extends StatelessWidget {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
+            physics: const BouncingScrollPhysics(),
             itemCount: movies.length,
             itemBuilder: (context, index) {
               final movie = movies[index];
