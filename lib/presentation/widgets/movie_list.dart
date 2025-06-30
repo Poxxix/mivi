@@ -21,6 +21,33 @@ class MovieList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (movies.isEmpty) return const SizedBox.shrink();
 
+    // Nếu title rỗng, hiển thị dạng grid (dùng cho filter theo genre)
+    if (title.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.65,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+          ),
+          itemCount: movies.length,
+          shrinkWrap: true,
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemBuilder: (context, index) {
+            final movie = movies[index];
+            return MovieCard(
+              movie: movie,
+              showFavoriteButton: showFavoriteButton,
+              onTap: onMovieTap != null ? () => onMovieTap!(movie) : null,
+            );
+          },
+        ),
+      );
+    }
+
+    // Mặc định: ListView ngang cho các section Trending, Popular, ...
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

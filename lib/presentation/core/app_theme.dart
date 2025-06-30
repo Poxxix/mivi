@@ -34,7 +34,7 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.white,
         indicatorColor: const Color(0xFFF3F4F6),
-        labelTextStyle: WidgetStateProperty.all(
+        labelTextStyle: MaterialStateProperty.all(
           const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -72,9 +72,11 @@ class AppTheme {
         onPrimary: AppColors.onPrimary,
         secondary: AppColors.secondary,
         onSecondary: AppColors.onSecondary,
+        background: AppColors.background,
+        onBackground: AppColors.onBackground,
         surface: AppColors.surface,
         onSurface: AppColors.onSurface,
-        surfaceContainerHighest: AppColors.surfaceVariant,
+        surfaceVariant: AppColors.surfaceVariant,
         onSurfaceVariant: AppColors.onSurfaceVariant,
         error: AppColors.error,
         onError: AppColors.onError,
@@ -94,7 +96,7 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.surfaceVariant,
-        labelTextStyle: WidgetStateProperty.all(
+        labelTextStyle: MaterialStateProperty.all(
           const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,

@@ -6,12 +6,16 @@ class MovieDetailHeader extends StatelessWidget {
   final Movie movie;
   final VoidCallback? onFavoriteToggle;
   final VoidCallback? onBackPressed;
+  final VoidCallback? onPlayPressed;
+  final VoidCallback? onWatchTrailerPressed;
 
   const MovieDetailHeader({
     super.key,
     required this.movie,
     this.onFavoriteToggle,
     this.onBackPressed,
+    this.onPlayPressed,
+    this.onWatchTrailerPressed,
   });
 
   @override
@@ -130,6 +134,16 @@ class MovieDetailHeader extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 8),
+              // Thời lượng phim
+              Text(
+                'Thời lượng: ${movie.formattedDuration}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Container(
@@ -167,20 +181,57 @@ class MovieDetailHeader extends StatelessWidget {
                       fontSize: 14,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    movie.formattedRuntime,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
-                  ),
                 ],
               ),
+              const SizedBox(height: 12),
+              if (onWatchTrailerPressed != null)
+                SizedBox(
+                  width: 160,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white),
+                    ),
+                    onPressed: onWatchTrailerPressed,
+                    icon: const Icon(Icons.ondemand_video, color: Colors.white),
+                    label: const Text('Xem trailer'),
+                  ),
+                ),
             ],
           ),
         ),
+        // Nút Play ở giữa poster
+        if (onPlayPressed != null)
+          Positioned.fill(
+            child: Center(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onPlayPressed,
+                  borderRadius: BorderRadius.circular(40),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.85),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 16,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow,
+                      color: Colors.white,
+                      size: 48,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
-} 
+}

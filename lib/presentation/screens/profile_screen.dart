@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:mivi/presentation/core/app_colors.dart';
-import 'package:mivi/presentation/providers/theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -85,14 +83,14 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.person_outline,
                           color: AppColors.primary,
                           size: 24,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Text(
+                      Text(
                         'Profile',
                         style: TextStyle(
                           color: AppColors.onBackground,
@@ -112,7 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.logout_rounded,
                         color: AppColors.error,
                         size: 24,
@@ -157,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                             ),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.person,
                             size: 40,
                             color: AppColors.onPrimary,
@@ -169,7 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'John Doe',
                                 style: TextStyle(
                                   color: AppColors.onBackground,
@@ -195,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                                   color: AppColors.primary.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Premium Member',
                                   style: TextStyle(
                                     color: AppColors.primary,
@@ -254,18 +252,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         subtitle: 'English',
                         onTap: () {},
                       ),
-                      Consumer<ThemeProvider>(
-                        builder: (context, themeProvider, child) {
-                          return _buildSwitchMenuItem(
-                            icon: Icons.dark_mode_outlined,
-                            title: 'Dark Mode',
-                            subtitle: themeProvider.isDarkMode ? 'Dark theme' : 'Light theme',
-                            value: themeProvider.isDarkMode,
-                            onChanged: (value) {
-                              themeProvider.setDarkMode(value);
-                            },
-                          );
-                        },
+                      _buildMenuItem(
+                        icon: Icons.dark_mode_outlined,
+                        title: 'Dark Mode',
+                        subtitle: 'Always enabled',
+                        onTap: () {},
                       ),
                       _buildMenuItem(
                         icon: Icons.info_outline,
@@ -298,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             padding: const EdgeInsets.only(left: 4, bottom: 16),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.onBackground,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -356,7 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.onBackground,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -384,64 +375,4 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       ),
     );
   }
-
-  Widget _buildSwitchMenuItem({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.primary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: AppColors.onBackground,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: AppColors.onBackground.withOpacity(0.6),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Switch(
-              value: value,
-              onChanged: onChanged,
-              activeColor: AppColors.primary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-} 
+}

@@ -1,9 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mivi/data/mock_data/mock_movies.dart';
 import 'package:mivi/data/models/movie_model.dart';
+import 'package:mivi/data/repositories/movie_repository.dart';
+import 'package:mivi/presentation/blocs/movie_bloc.dart';
+import 'package:mivi/presentation/widgets/search_bar.dart' as custom;
 import 'package:mivi/presentation/widgets/movie_list.dart';
 import 'package:mivi/presentation/core/app_colors.dart';
+import 'package:shimmer/shimmer.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -18,6 +24,8 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  late MovieBloc _searchBloc;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -41,6 +49,10 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
         curve: Curves.easeOut,
       ),
     );
+    
+    // Initialize search BLoC
+    _searchBloc = MovieBloc(movieRepository: MovieRepository());
+    
     _animationController.forward();
   }
 
@@ -48,19 +60,39 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     context.push('/movie/${movie.id}', extra: movie);
   }
 
+  void _onSearchChanged(String value) {
+    setState(() {
+      _query = value;
+    });
+
+    // Debounce search to avoid too many API calls
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (value.trim().isNotEmpty) {
+        _searchBloc.add(SearchMovies(value.trim()));
+      }
+    });
+  }
+
+  void _clearSearch() {
+    setState(() {
+      _query = '';
+      _controller.clear();
+    });
+    _debounceTimer?.cancel();
+  }
+
   @override
   void dispose() {
     _controller.dispose();
     _animationController.dispose();
+    _searchBloc.close();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final results = MockMovies.movies
-        .where((m) => m.title.toLowerCase().contains(_query.toLowerCase()))
-        .toList();
-    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -94,7 +126,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.arrow_back_rounded,
                                 color: AppColors.onBackground,
                               ),
@@ -102,7 +134,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                             ),
                           ),
                           const SizedBox(width: 16),
-                          const Text(
+                          Text(
                             'Search Movies',
                             style: TextStyle(
                               color: AppColors.onBackground,
@@ -124,14 +156,14 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                         ),
                         child: TextField(
                           controller: _controller,
-                          style: const TextStyle(color: AppColors.onBackground),
+                          style: TextStyle(color: AppColors.onBackground),
                           autofocus: true,
                           decoration: InputDecoration(
                             hintText: 'Search for movies...',
                             hintStyle: TextStyle(
                               color: AppColors.onBackground.withOpacity(0.5),
                             ),
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.search_rounded,
                               color: AppColors.primary,
                               size: 24,
@@ -142,12 +174,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                                       Icons.clear_rounded,
                                       color: AppColors.onBackground.withOpacity(0.7),
                                     ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _query = '';
-                                        _controller.clear();
-                                      });
-                                    },
+                                    onPressed: _clearSearch,
                                   )
                                 : null,
                             border: InputBorder.none,
@@ -156,11 +183,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                               vertical: 16,
                             ),
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _query = value;
-                            });
-                          },
+                          onChanged: _onSearchChanged,
                         ),
                       ),
                     ],
@@ -171,9 +194,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
               Expanded(
                 child: _query.isEmpty
                     ? _buildEmptyState()
-                    : results.isEmpty
-                        ? _buildNoResults()
-                        : _buildSearchResults(results),
+                    : _buildSearchResults(),
               ),
             ],
           ),
@@ -197,24 +218,24 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                   color: AppColors.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.movie_filter_outlined,
-                  size: 64,
+                child: Icon(
+                  Icons.search_rounded,
+                  size: 48,
                   color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Discover Movies',
+              Text(
+                'Search for Movies',
                 style: TextStyle(
                   color: AppColors.onBackground,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
-                'Search for your favorite movies and discover new ones',
+                'Find your favorite movies by searching for titles, actors, or genres',
                 style: TextStyle(
                   color: AppColors.onBackground.withOpacity(0.7),
                   fontSize: 16,
@@ -228,86 +249,256 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildNoResults() {
-    return SlideTransition(
-      position: _slideAnimation,
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.search_off_rounded,
-                  size: 64,
-                  color: AppColors.onBackground.withOpacity(0.5),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'No Results Found',
-                style: TextStyle(
-                  color: AppColors.onBackground,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Try searching with different keywords',
-                style: TextStyle(
-                  color: AppColors.onBackground.withOpacity(0.7),
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
+  Widget _buildSearchResults() {
+    return BlocBuilder<MovieBloc, MovieState>(
+      bloc: _searchBloc,
+      builder: (context, state) {
+        if (state is MovieLoading) {
+          return _buildLoadingState();
+        } else if (state is MovieLoaded) {
+          if (state.movies.isEmpty) {
+            return _buildNoResults();
+          }
+          return _buildResultsList(state.movies);
+        } else if (state is MovieError) {
+          return _buildErrorState(state.message);
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 
-  Widget _buildSearchResults(List<Movie> results) {
-    return SlideTransition(
-      position: _slideAnimation,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(0, 8, 0, 100),
+  Widget _buildLoadingState() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.movie_outlined,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${results.length} movie${results.length == 1 ? '' : 's'} found',
-                  style: TextStyle(
-                    color: AppColors.onBackground.withOpacity(0.8),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+          Text(
+            'Searching for "$_query"...',
+            style: TextStyle(
+              color: AppColors.onBackground,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          MovieList(
-            title: '',
-            movies: results,
-            onMovieTap: _onMovieTap,
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              itemCount: 5,
+              itemBuilder: (context, index) {
+                return Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(
+                    height: 120,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
-} 
+
+  Widget _buildNoResults() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.search_off_rounded,
+                size: 48,
+                color: Colors.orange,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No Results Found',
+              style: TextStyle(
+                color: AppColors.onBackground,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Try searching with different keywords or check your spelling',
+              style: TextStyle(
+                color: AppColors.onBackground.withOpacity(0.7),
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultsList(List<Movie> movies) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${movies.length} results for "$_query"',
+            style: TextStyle(
+              color: AppColors.onBackground,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              itemCount: movies.length,
+              itemBuilder: (context, index) {
+                final movie = movies[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceVariant.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(12),
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        movie.posterPath,
+                        width: 60,
+                        height: 90,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 60,
+                            height: 90,
+                            color: AppColors.surfaceVariant,
+                            child: Icon(
+                              Icons.movie,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    title: Text(
+                      movie.title,
+                      style: TextStyle(
+                        color: AppColors.onBackground,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(
+                          movie.releaseYear,
+                          style: TextStyle(
+                            color: AppColors.onBackground.withOpacity(0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              movie.voteAverage.toStringAsFixed(1),
+                              style: TextStyle(
+                                color: AppColors.onBackground.withOpacity(0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    onTap: () => _onMovieTap(movie),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: Colors.red,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Search Error',
+              style: TextStyle(
+                color: AppColors.onBackground,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              style: TextStyle(
+                color: AppColors.onBackground.withOpacity(0.7),
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                if (_query.trim().isNotEmpty) {
+                  _searchBloc.add(SearchMovies(_query.trim()));
+                }
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
