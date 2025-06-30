@@ -81,8 +81,25 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
+        builder: (context) => Center(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  'Đang tải trailer...',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
         ),
       );
 
@@ -95,14 +112,35 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       }
 
       if (youtubeKey != null && mounted) {
-        // Chuyển sang màn TrailerPlayerScreen và chờ khi pop về
-        await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => TrailerPlayerScreen(youtubeKey: youtubeKey),
+        // Show success message briefly
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                const SizedBox(width: 8),
+                Text('Đã tìm thấy trailer!'),
+              ],
+            ),
+            backgroundColor: Colors.green[700],
+            duration: Duration(milliseconds: 800),
+            behavior: SnackBarBehavior.floating,
           ),
         );
+        
+        // Wait a bit for snackbar then navigate
+        await Future.delayed(Duration(milliseconds: 300));
+        
+        if (mounted) {
+          // Chuyển sang màn TrailerPlayerScreen và chờ khi pop về
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => TrailerPlayerScreen(youtubeKey: youtubeKey),
+            ),
+          );
+        }
       } else if (mounted) {
-        _showErrorSnackBar('Không tìm thấy trailer cho phim này');
+        _showErrorSnackBar('❌ Không tìm thấy trailer cho phim này');
       }
     } catch (e) {
       // Hide loading indicator nếu vẫn còn mounted
@@ -110,7 +148,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
         Navigator.of(context, rootNavigator: true).pop();
       }
       if (mounted) {
-        _showErrorSnackBar('Lỗi khi tải trailer: $e');
+        _showErrorSnackBar('⚠️ Lỗi khi tải trailer: ${e.toString().contains('Exception:') ? e.toString().split('Exception: ')[1] : e.toString()}');
       }
     }
   }
