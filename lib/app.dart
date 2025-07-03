@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:mivi/presentation/core/app_theme.dart';
 import 'package:mivi/presentation/navigation/app_router.dart';
 import 'package:mivi/presentation/providers/theme_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MiviApp extends StatelessWidget {
   const MiviApp({super.key});
@@ -24,4 +25,4 @@ class MiviApp extends StatelessWidget {
       ),
     );
   }
-} 
+}

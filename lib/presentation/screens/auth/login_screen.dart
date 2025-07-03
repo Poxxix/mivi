@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mivi/presentation/core/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,7 +10,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -27,23 +29,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       duration: const Duration(milliseconds: 1000),
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
     _animationController.forward();
   }
 
+  final _supabase = Supabase.instance.client;
   @override
   void dispose() {
     _emailController.dispose();
@@ -52,15 +47,48 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     super.dispose();
   }
 
+  // Future<void> _handleLogin() async {
+  //   if (_formKey.currentState!.validate()) {
+  //     setState(() => _isLoading = true);
+  //     // TODO: Implement actual login logic
+  //     await Future.delayed(const Duration(seconds: 1)); // Simulated delay
+  //     if (mounted) {
+  //       context.go('/');
+  //     }
+  //     setState(() => _isLoading = false);
+  //   }
+  // }
+
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      // TODO: Implement actual login logic
-      await Future.delayed(const Duration(seconds: 1)); // Simulated delay
-      if (mounted) {
-        context.go('/');
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      try {
+        final response = await Supabase.instance.client.auth.signInWithPassword(
+          email: email,
+          password: password,
+        );
+        if (response.user != null) {
+          if (mounted) context.go('/');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đăng nhập thất bại: Sai email hoặc mật khẩu!'),
+            ),
+          );
+        }
+      } on AuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đăng nhập thất bại: ${e.message}')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lỗi không xác định khi đăng nhập!')),
+        );
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
-      setState(() => _isLoading = false);
     }
   }
 
@@ -123,8 +151,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         style: const TextStyle(color: AppColors.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          labelStyle: TextStyle(color: AppColors.onBackground.withOpacity(0.7)),
-                          prefixIcon: Icon(Icons.email_outlined, color: AppColors.primary),
+                          labelStyle: TextStyle(
+                            color: AppColors.onBackground.withOpacity(0.7),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: AppColors.primary,
+                          ),
                           filled: true,
                           fillColor: AppColors.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
@@ -177,8 +210,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         style: const TextStyle(color: AppColors.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          labelStyle: TextStyle(color: AppColors.onBackground.withOpacity(0.7)),
-                          prefixIcon: Icon(Icons.lock_outline, color: AppColors.primary),
+                          labelStyle: TextStyle(
+                            color: AppColors.onBackground.withOpacity(0.7),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.lock_outline,
+                            color: AppColors.primary,
+                          ),
                           filled: true,
                           fillColor: AppColors.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
@@ -255,7 +293,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.onPrimary),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.onPrimary,
+                                  ),
                                 ),
                               )
                             : const Text(

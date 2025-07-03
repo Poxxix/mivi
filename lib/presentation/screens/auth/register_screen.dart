@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mivi/presentation/core/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -9,7 +10,8 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProviderStateMixin {
+class _RegisterScreenState extends State<RegisterScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -30,22 +32,16 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       duration: const Duration(milliseconds: 1000),
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
     _animationController.forward();
   }
+
+  final _supabase = Supabase.instance.client;
 
   @override
   void dispose() {
@@ -57,15 +53,64 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     super.dispose();
   }
 
+  // Future<void> _handleRegister() async {
+  //   if (_formKey.currentState!.validate()) {
+  //     setState(() => _isLoading = true);
+  //     // TODO: Implement actual registration logic
+  //     await Future.delayed(const Duration(seconds: 1)); // Simulated delay
+  //     if (mounted) {
+  //       context.go('/');
+  //     }
+  //     setState(() => _isLoading = false);
+  //   }
+  // }
+
   Future<void> _handleRegister() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      // TODO: Implement actual registration logic
-      await Future.delayed(const Duration(seconds: 1)); // Simulated delay
-      if (mounted) {
-        context.go('/');
+
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      final username = _usernameController.text.trim();
+
+      try {
+        final response = await Supabase.instance.client.auth.signUp(
+          email: email,
+          password: password,
+        );
+
+        final user = response.user;
+
+        if (user != null) {
+          await Supabase.instance.client.from('profiles').insert({
+            'id': user.id,
+            'username': username,
+            'email': email, // nếu có cột email
+          });
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Hãy xác nhận email của bạn trước khi đăng nhập!'),
+            ),
+          );
+          await Future.delayed(const Duration(seconds: 2));
+          context.go(
+            '/login',
+          ); // chuyển về trang đăng nhập sau khi đăng ký thành công
+        }
+      } on AuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đăng ký thất bại: ${e.message}')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Lỗi không xác định')));
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
-      setState(() => _isLoading = false);
     }
   }
 
@@ -135,8 +180,13 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                         style: const TextStyle(color: AppColors.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Username',
-                          labelStyle: TextStyle(color: AppColors.onBackground.withOpacity(0.7)),
-                          prefixIcon: Icon(Icons.person_outline, color: AppColors.primary),
+                          labelStyle: TextStyle(
+                            color: AppColors.onBackground.withOpacity(0.7),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            color: AppColors.primary,
+                          ),
                           filled: true,
                           fillColor: AppColors.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
@@ -189,8 +239,13 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                         style: const TextStyle(color: AppColors.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          labelStyle: TextStyle(color: AppColors.onBackground.withOpacity(0.7)),
-                          prefixIcon: Icon(Icons.email_outlined, color: AppColors.primary),
+                          labelStyle: TextStyle(
+                            color: AppColors.onBackground.withOpacity(0.7),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: AppColors.primary,
+                          ),
                           filled: true,
                           fillColor: AppColors.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
@@ -243,8 +298,13 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                         style: const TextStyle(color: AppColors.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          labelStyle: TextStyle(color: AppColors.onBackground.withOpacity(0.7)),
-                          prefixIcon: Icon(Icons.lock_outline, color: AppColors.primary),
+                          labelStyle: TextStyle(
+                            color: AppColors.onBackground.withOpacity(0.7),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.lock_outline,
+                            color: AppColors.primary,
+                          ),
                           filled: true,
                           fillColor: AppColors.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
@@ -310,8 +370,13 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                         style: const TextStyle(color: AppColors.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Confirm Password',
-                          labelStyle: TextStyle(color: AppColors.onBackground.withOpacity(0.7)),
-                          prefixIcon: Icon(Icons.lock_outline, color: AppColors.primary),
+                          labelStyle: TextStyle(
+                            color: AppColors.onBackground.withOpacity(0.7),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.lock_outline,
+                            color: AppColors.primary,
+                          ),
                           filled: true,
                           fillColor: AppColors.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
@@ -354,7 +419,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
                               });
                             },
                           ),
@@ -388,7 +454,9 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.onPrimary),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.onPrimary,
+                                  ),
                                 ),
                               )
                             : const Text(

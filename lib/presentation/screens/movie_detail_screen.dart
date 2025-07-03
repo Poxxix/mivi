@@ -38,7 +38,10 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       _error = null;
     });
     try {
-      final movie = await _movieRepository.getMovieWithCredits(_movie.id, isFavorite: _movie.isFavorite);
+      final movie = await _movieRepository.getMovieWithCredits(
+        _movie.id,
+        isFavorite: _movie.isFavorite,
+      );
       setState(() {
         _movie = movie;
         _isLoading = false;
@@ -127,10 +130,10 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        
+
         // Wait a bit for snackbar then navigate
         await Future.delayed(Duration(milliseconds: 300));
-        
+
         if (mounted) {
           // Chuyển sang màn TrailerPlayerScreen và chờ khi pop về
           await Navigator.of(context).push(
@@ -148,7 +151,9 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
         Navigator.of(context, rootNavigator: true).pop();
       }
       if (mounted) {
-        _showErrorSnackBar('⚠️ Lỗi khi tải trailer: ${e.toString().contains('Exception:') ? e.toString().split('Exception: ')[1] : e.toString()}');
+        _showErrorSnackBar(
+          '⚠️ Lỗi khi tải trailer: ${e.toString().contains('Exception:') ? e.toString().split('Exception: ')[1] : e.toString()}',
+        );
       }
     }
   }
@@ -170,65 +175,65 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error_outline, color: Colors.red, size: 48),
-                        const SizedBox(height: 16),
-                        Text(
-                          _error!,
-                          style: const TextStyle(color: Colors.red, fontSize: 16),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: _fetchMovieDetail,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Thử lại'),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                )
-              : CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: MovieDetailHeader(
-                        movie: _movie,
-                        onBackPressed: () {
-                          if (context.canPop()) {
-                            context.pop();
-                          } else {
-                            context.go('/');
-                          }
-                        },
-                        onFavoriteToggle: _onFavoriteToggle,
-                        onPlayPressed: _onPlayPressed,
-                        onWatchTrailerPressed: _onWatchTrailerPressed,
-                      ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: _fetchMovieDetail,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Thử lại'),
                     ),
-                    SliverToBoxAdapter(child: MovieInfoSection(movie: _movie)),
-                    if (_movie.cast.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: CastList(
-                          title: 'Cast',
-                          cast: _movie.cast,
-                          onCastMemberTap: _onCastMemberTap,
-                        ),
-                      ),
-                    if (_movie.similarMovies.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: MovieList(
-                          title: 'Similar Movies',
-                          movies: _movie.similarMovies,
-                          onMovieTap: _onSimilarMovieTap,
-                        ),
-                      ),
                   ],
                 ),
+              ),
+            )
+          : CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: MovieDetailHeader(
+                    movie: _movie,
+                    onBackPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/');
+                      }
+                    },
+                    onFavoriteToggle: _onFavoriteToggle,
+                    onPlayPressed: _onPlayPressed,
+                    onWatchTrailerPressed: _onWatchTrailerPressed,
+                  ),
+                ),
+                SliverToBoxAdapter(child: MovieInfoSection(movie: _movie)),
+                if (_movie.cast.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: CastList(
+                      title: 'Cast',
+                      cast: _movie.cast,
+                      onCastMemberTap: _onCastMemberTap,
+                    ),
+                  ),
+                if (_movie.similarMovies.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: MovieList(
+                      title: 'Similar Movies',
+                      movies: _movie.similarMovies,
+                      onMovieTap: _onSimilarMovieTap,
+                    ),
+                  ),
+              ],
+            ),
     );
   }
 }

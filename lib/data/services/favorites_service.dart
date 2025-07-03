@@ -10,7 +10,7 @@ class FavoritesService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final favoritesJson = prefs.getStringList(_favoritesKey) ?? [];
-      
+
       return favoritesJson
           .map((json) => Movie.fromJson(jsonDecode(json)))
           .toList();
@@ -25,20 +25,20 @@ class FavoritesService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final favoritesJson = prefs.getStringList(_favoritesKey) ?? [];
-      
+
       // Check if movie is already in favorites
       final movieIds = favoritesJson
           .map((json) => Movie.fromJson(jsonDecode(json)).id)
           .toList();
-      
+
       if (movieIds.contains(movie.id)) {
         return false; // Already in favorites
       }
-      
+
       // Add movie to favorites
       final movieWithFavorite = movie.copyWith(isFavorite: true);
       favoritesJson.add(jsonEncode(movieWithFavorite.toJson()));
-      
+
       await prefs.setStringList(_favoritesKey, favoritesJson);
       return true;
     } catch (e) {
@@ -52,13 +52,13 @@ class FavoritesService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final favoritesJson = prefs.getStringList(_favoritesKey) ?? [];
-      
+
       // Remove movie from favorites
       favoritesJson.removeWhere((json) {
         final movie = Movie.fromJson(jsonDecode(json));
         return movie.id == movieId;
       });
-      
+
       await prefs.setStringList(_favoritesKey, favoritesJson);
       return true;
     } catch (e) {
@@ -72,7 +72,7 @@ class FavoritesService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final favoritesJson = prefs.getStringList(_favoritesKey) ?? [];
-      
+
       return favoritesJson.any((json) {
         final movie = Movie.fromJson(jsonDecode(json));
         return movie.id == movieId;
@@ -87,7 +87,7 @@ class FavoritesService {
   Future<bool> toggleFavorite(Movie movie) async {
     try {
       final isCurrentlyFavorite = await isFavorite(movie.id);
-      
+
       if (isCurrentlyFavorite) {
         return await removeFromFavorites(movie.id);
       } else {
@@ -110,4 +110,4 @@ class FavoritesService {
       return false;
     }
   }
-} 
+}

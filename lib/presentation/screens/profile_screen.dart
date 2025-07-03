@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mivi/presentation/core/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,6 +14,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  Map<String, dynamic>? _profile;
+  bool _loading = true;
 
   @override
   void initState() {
@@ -37,6 +41,21 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       ),
     );
     _animationController.forward();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    final response = await Supabase.instance.client
+        .from('profiles')
+        .select()
+        .eq('id', user.id)
+        .single();
+    setState(() {
+      _profile = response;
+      _loading = false;
+    });
   }
 
   @override
@@ -47,6 +66,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: AppColors.background,
       body: FadeTransition(
@@ -168,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'John Doe',
+                                _profile?['username'] ?? '',
                                 style: TextStyle(
                                   color: AppColors.onBackground,
                                   fontSize: 22,
@@ -177,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'john.doe@email.com',
+                                _profile?['email'] ?? '',
                                 style: TextStyle(
                                   color: AppColors.onBackground.withOpacity(0.7),
                                   fontSize: 16,
