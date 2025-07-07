@@ -1,39 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
 
 class ProfileMenuItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
   final Color? iconColor;
   final Color? textColor;
-  final Widget? trailing;
 
   const ProfileMenuItem({
     super.key,
     required this.icon,
     required this.title,
     this.subtitle,
-    this.onTap,
+    required this.onTap,
     this.iconColor,
     this.textColor,
-    this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               Icon(
                 icon,
-                color: iconColor ?? AppColors.primary,
+                color: iconColor ?? colorScheme.primary,
                 size: 24,
               ),
               const SizedBox(width: 16),
@@ -45,8 +45,8 @@ class ProfileMenuItem extends StatelessWidget {
                       title,
                       style: TextStyle(
                         fontSize: 16,
-                        color: textColor ?? AppColors.onSurface,
                         fontWeight: FontWeight.w500,
+                        color: textColor ?? colorScheme.onSurface,
                       ),
                     ),
                     if (subtitle != null) ...[
@@ -55,23 +55,18 @@ class ProfileMenuItem extends StatelessWidget {
                         subtitle!,
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.onSurface.withOpacity(0.7),
+                          color: colorScheme.onSurface.withOpacity(0.7),
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-              if (trailing != null) ...[
-                const SizedBox(width: 8),
-                trailing!,
-              ] else ...[
-                const Icon(
-                  Icons.chevron_right,
-                  color: AppColors.onSurfaceVariant,
-                  size: 24,
-                ),
-              ],
+              Icon(
+                Icons.chevron_right,
+                color: colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
             ],
           ),
         ),

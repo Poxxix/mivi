@@ -7,7 +7,7 @@ import 'package:mivi/data/repositories/movie_repository.dart';
 import 'package:mivi/presentation/blocs/movie_bloc.dart';
 import 'package:mivi/presentation/widgets/movie_list.dart';
 import 'package:mivi/presentation/widgets/genre_list.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
+import 'package:mivi/presentation/widgets/featured_movies_carousel.dart';
 import 'package:shimmer/shimmer.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -109,8 +109,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.background,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SafeArea(
@@ -120,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 slivers: [
                   // Enhanced App Bar
                   SliverAppBar(
-                    backgroundColor: AppColors.background,
+                    backgroundColor: colorScheme.background,
                     floating: true,
                     expandedHeight: 80,
                     flexibleSpace: FlexibleSpaceBar(
@@ -130,8 +132,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              AppColors.background,
-                              AppColors.background.withOpacity(0.8),
+                              colorScheme.background,
+                              colorScheme.background.withOpacity(0.8),
                             ],
                           ),
                         ),
@@ -143,21 +145,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: colorScheme.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.movie_creation_outlined,
-                            color: AppColors.primary,
+                            color: colorScheme.primary,
                             size: 24,
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Flexible(
+                        Flexible(
                           child: Text(
                             'Mivi',
                             style: TextStyle(
-                              color: AppColors.onBackground,
+                              color: colorScheme.onBackground,
                               fontWeight: FontWeight.bold,
                               fontSize: 24,
                               letterSpacing: 0.5,
@@ -171,13 +173,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       Container(
                         margin: const EdgeInsets.only(right: 16),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceVariant.withOpacity(0.1),
+                          color: colorScheme.surfaceVariant.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.search_rounded,
-                            color: AppColors.onBackground,
+                            color: colorScheme.onBackground,
                             size: 24,
                           ),
                           onPressed: _onSearchTap,
@@ -196,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           Text(
                             'Welcome back!',
                             style: TextStyle(
-                              color: AppColors.onBackground.withOpacity(0.8),
+                              color: colorScheme.onBackground.withOpacity(0.8),
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
@@ -207,17 +209,53 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           Text(
                             'Discover amazing movies',
                             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              color: AppColors.onBackground,
+                              color: colorScheme.onBackground,
                               fontWeight: FontWeight.bold,
                               height: 1.2,
-                            ) ?? const TextStyle(
-                              color: AppColors.onBackground,
+                            ) ?? TextStyle(
+                              color: colorScheme.onBackground,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               height: 1.2,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Featured Movies Carousel
+                  SliverToBoxAdapter(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              '✨ Featured Movies',
+                              style: TextStyle(
+                                color: colorScheme.onBackground,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          BlocBuilder<MovieBloc, MovieState>(
+                            bloc: _popularBloc,
+                            builder: (context, state) {
+                              if (state is MovieLoaded && state.movies.isNotEmpty) {
+                                // Take top 5 movies for carousel
+                                final featuredMovies = state.movies.take(5).toList();
+                                return FeaturedMoviesCarousel(
+                                  movies: featuredMovies,
+                                  onMovieTap: _onMovieTap,
+                                );
+                              }
+                              return const SizedBox(height: 280);
+                            },
                           ),
                         ],
                       ),
@@ -231,12 +269,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 12),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
                             child: Text(
                               'Browse by Genre',
                               style: TextStyle(
-                                color: AppColors.onBackground,
+                                color: colorScheme.onBackground,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -298,6 +336,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildLoadingList() {
+    final colorScheme = Theme.of(context).colorScheme;
     return SizedBox(
       height: 200,
       child: ListView.builder(
@@ -308,11 +347,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             width: 140,
             margin: const EdgeInsets.only(right: 16),
             child: Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
+              baseColor: colorScheme.surfaceVariant,
+              highlightColor: colorScheme.surface,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -324,13 +363,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildEmptyState(String title) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 120,
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant.withOpacity(0.1),
+        color: colorScheme.surfaceVariant.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.surfaceVariant.withOpacity(0.3),
+          color: colorScheme.surfaceVariant.withOpacity(0.3),
         ),
       ),
       child: Center(
@@ -340,13 +380,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             Icon(
               Icons.movie_outlined,
               size: 32,
-              color: AppColors.onBackground.withOpacity(0.5),
+              color: colorScheme.onBackground.withOpacity(0.5),
             ),
             const SizedBox(height: 8),
             Text(
               'No movies found',
               style: TextStyle(
-                color: AppColors.onBackground.withOpacity(0.7),
+                color: colorScheme.onBackground.withOpacity(0.7),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -358,19 +398,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildErrorState(String title, String message, VoidCallback onRetry) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.1),
+        color: colorScheme.error.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.error.withOpacity(0.3)),
       ),
       child: Column(
         children: [
           Text(
             'Error loading $title',
             style: TextStyle(
-              color: Colors.red[700],
+              color: colorScheme.error,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -378,7 +419,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           Text(
             message,
             style: TextStyle(
-              color: Colors.red[600],
+              color: colorScheme.error.withOpacity(0.8),
               fontSize: 12,
             ),
             textAlign: TextAlign.center,
@@ -389,8 +430,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             icon: const Icon(Icons.refresh, size: 16),
             label: const Text('Retry'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[700],
-              foregroundColor: Colors.white,
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
           ),
@@ -400,6 +441,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildMovieSection(String title, String subtitle, MovieBloc bloc, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -408,10 +450,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: AppColors.primary, size: 20),
+              child: Icon(icon, color: colorScheme.primary, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -420,8 +462,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: AppColors.onBackground,
+                    style: TextStyle(
+                      color: colorScheme.onBackground,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -429,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: AppColors.onBackground.withOpacity(0.7),
+                      color: colorScheme.onBackground.withOpacity(0.7),
                       fontSize: 14,
                     ),
                   ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -116,13 +115,15 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: colorScheme.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.onBackground),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onBackground),
           onPressed: () => context.go('/login'),
         ),
       ),
@@ -145,13 +146,13 @@ class _RegisterScreenState extends State<RegisterScreen>
                         height: 100,
                         width: 100,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: colorScheme.primary.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.movie_creation_outlined,
                           size: 56,
-                          color: AppColors.primary,
+                          color: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -161,7 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.onBackground,
+                          color: colorScheme.onBackground,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -169,7 +170,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                       Text(
                         'Join us and discover amazing movies',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.onBackground.withOpacity(0.7),
+                          color: colorScheme.onBackground.withOpacity(0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -177,18 +178,18 @@ class _RegisterScreenState extends State<RegisterScreen>
                       // Username Field
                       TextFormField(
                         controller: _usernameController,
-                        style: const TextStyle(color: AppColors.onBackground),
+                        style: TextStyle(color: colorScheme.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Username',
                           labelStyle: TextStyle(
-                            color: AppColors.onBackground.withOpacity(0.7),
+                            color: colorScheme.onBackground.withOpacity(0.7),
                           ),
                           prefixIcon: Icon(
                             Icons.person_outline,
-                            color: AppColors.primary,
+                            color: colorScheme.primary,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceVariant.withOpacity(0.1),
+                          fillColor: colorScheme.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -196,27 +197,27 @@ class _RegisterScreenState extends State<RegisterScreen>
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.surfaceVariant.withOpacity(0.2),
+                              color: colorScheme.surfaceVariant.withOpacity(0.2),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.primary,
+                              color: colorScheme.primary,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
                           focusedErrorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
@@ -236,18 +237,18 @@ class _RegisterScreenState extends State<RegisterScreen>
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: AppColors.onBackground),
+                        style: TextStyle(color: colorScheme.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Email',
                           labelStyle: TextStyle(
-                            color: AppColors.onBackground.withOpacity(0.7),
+                            color: colorScheme.onBackground.withOpacity(0.7),
                           ),
                           prefixIcon: Icon(
                             Icons.email_outlined,
-                            color: AppColors.primary,
+                            color: colorScheme.primary,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceVariant.withOpacity(0.1),
+                          fillColor: colorScheme.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -255,27 +256,27 @@ class _RegisterScreenState extends State<RegisterScreen>
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.surfaceVariant.withOpacity(0.2),
+                              color: colorScheme.surfaceVariant.withOpacity(0.2),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.primary,
+                              color: colorScheme.primary,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
                           focusedErrorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
@@ -295,18 +296,18 @@ class _RegisterScreenState extends State<RegisterScreen>
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
-                        style: const TextStyle(color: AppColors.onBackground),
+                        style: TextStyle(color: colorScheme.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Password',
                           labelStyle: TextStyle(
-                            color: AppColors.onBackground.withOpacity(0.7),
+                            color: colorScheme.onBackground.withOpacity(0.7),
                           ),
                           prefixIcon: Icon(
                             Icons.lock_outline,
-                            color: AppColors.primary,
+                            color: colorScheme.primary,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceVariant.withOpacity(0.1),
+                          fillColor: colorScheme.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -314,27 +315,27 @@ class _RegisterScreenState extends State<RegisterScreen>
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.surfaceVariant.withOpacity(0.2),
+                              color: colorScheme.surfaceVariant.withOpacity(0.2),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.primary,
+                              color: colorScheme.primary,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
                           focusedErrorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
@@ -343,7 +344,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                               _obscurePassword
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
-                              color: AppColors.onBackground.withOpacity(0.7),
+                              color: colorScheme.onBackground.withOpacity(0.7),
                             ),
                             onPressed: () {
                               setState(() {
@@ -367,18 +368,18 @@ class _RegisterScreenState extends State<RegisterScreen>
                       TextFormField(
                         controller: _confirmPasswordController,
                         obscureText: _obscureConfirmPassword,
-                        style: const TextStyle(color: AppColors.onBackground),
+                        style: TextStyle(color: colorScheme.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Confirm Password',
                           labelStyle: TextStyle(
-                            color: AppColors.onBackground.withOpacity(0.7),
+                            color: colorScheme.onBackground.withOpacity(0.7),
                           ),
                           prefixIcon: Icon(
                             Icons.lock_outline,
-                            color: AppColors.primary,
+                            color: colorScheme.primary,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceVariant.withOpacity(0.1),
+                          fillColor: colorScheme.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -386,27 +387,27 @@ class _RegisterScreenState extends State<RegisterScreen>
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.surfaceVariant.withOpacity(0.2),
+                              color: colorScheme.surfaceVariant.withOpacity(0.2),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.primary,
+                              color: colorScheme.primary,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
                           focusedErrorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
@@ -415,7 +416,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                               _obscureConfirmPassword
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
-                              color: AppColors.onBackground.withOpacity(0.7),
+                              color: colorScheme.onBackground.withOpacity(0.7),
                             ),
                             onPressed: () {
                               setState(() {
@@ -440,8 +441,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                       ElevatedButton(
                         onPressed: _isLoading ? null : _handleRegister,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.onPrimary,
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -449,13 +450,13 @@ class _RegisterScreenState extends State<RegisterScreen>
                           elevation: 0,
                         ),
                         child: _isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppColors.onPrimary,
+                                    colorScheme.onPrimary,
                                   ),
                                 ),
                               )
@@ -472,20 +473,20 @@ class _RegisterScreenState extends State<RegisterScreen>
                       TextButton(
                         onPressed: () => context.go('/login'),
                         style: TextButton.styleFrom(
-                          foregroundColor: AppColors.primary,
+                          foregroundColor: colorScheme.primary,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         child: RichText(
                           text: TextSpan(
                             text: "Already have an account? ",
                             style: TextStyle(
-                              color: AppColors.onBackground.withOpacity(0.7),
+                              color: colorScheme.onBackground.withOpacity(0.7),
                             ),
                             children: [
                               TextSpan(
                                 text: 'Sign In',
-                                style: const TextStyle(
-                                  color: AppColors.primary,
+                                style: TextStyle(
+                                  color: colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

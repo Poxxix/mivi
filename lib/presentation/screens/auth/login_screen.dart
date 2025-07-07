@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
+import 'package:mivi/data/services/guest_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isGuestLoading = false;
   bool _obscurePassword = true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -38,7 +39,6 @@ class _LoginScreenState extends State<LoginScreen>
     _animationController.forward();
   }
 
-  final _supabase = Supabase.instance.client;
   @override
   void dispose() {
     _emailController.dispose();
@@ -46,18 +46,6 @@ class _LoginScreenState extends State<LoginScreen>
     _animationController.dispose();
     super.dispose();
   }
-
-  // Future<void> _handleLogin() async {
-  //   if (_formKey.currentState!.validate()) {
-  //     setState(() => _isLoading = true);
-  //     // TODO: Implement actual login logic
-  //     await Future.delayed(const Duration(seconds: 1)); // Simulated delay
-  //     if (mounted) {
-  //       context.go('/');
-  //     }
-  //     setState(() => _isLoading = false);
-  //   }
-  // }
 
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
@@ -70,32 +58,66 @@ class _LoginScreenState extends State<LoginScreen>
           password: password,
         );
         if (response.user != null) {
+          // Exit guest mode when user logs in
+          await GuestService().exitGuestMode();
           if (mounted) context.go('/');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đăng nhập thất bại: Sai email hoặc mật khẩu!'),
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Đăng nhập thất bại: Sai email hoặc mật khẩu!'),
+              ),
+            );
+          }
         }
       } on AuthException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đăng nhập thất bại: ${e.message}')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Đăng nhập thất bại: ${e.message}')),
+          );
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lỗi không xác định khi đăng nhập!')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Lỗi không xác định khi đăng nhập!')),
+          );
+        }
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
     }
   }
 
+  Future<void> _handleGuestLogin() async {
+    setState(() => _isGuestLoading = true);
+    try {
+      final success = await GuestService().enterGuestMode();
+      if (success && mounted) {
+        context.go('/');
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không thể tiếp tục với chế độ khách!')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lỗi khi vào chế độ khách!')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGuestLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -115,13 +137,13 @@ class _LoginScreenState extends State<LoginScreen>
                         height: 120,
                         width: 120,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: colorScheme.primary.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.movie_creation_outlined,
                           size: 64,
-                          color: AppColors.primary,
+                          color: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -131,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen>
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.onBackground,
+                          color: colorScheme.onBackground,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -139,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen>
                       Text(
                         'Sign in to continue',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.onBackground.withOpacity(0.7),
+                          color: colorScheme.onBackground.withOpacity(0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -148,18 +170,18 @@ class _LoginScreenState extends State<LoginScreen>
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: AppColors.onBackground),
+                        style: TextStyle(color: colorScheme.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Email',
                           labelStyle: TextStyle(
-                            color: AppColors.onBackground.withOpacity(0.7),
+                            color: colorScheme.onBackground.withOpacity(0.7),
                           ),
                           prefixIcon: Icon(
                             Icons.email_outlined,
-                            color: AppColors.primary,
+                            color: colorScheme.primary,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceVariant.withOpacity(0.1),
+                          fillColor: colorScheme.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -167,27 +189,27 @@ class _LoginScreenState extends State<LoginScreen>
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.surfaceVariant.withOpacity(0.2),
+                              color: colorScheme.surfaceVariant.withOpacity(0.2),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.primary,
+                              color: colorScheme.primary,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
                           focusedErrorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
@@ -207,18 +229,18 @@ class _LoginScreenState extends State<LoginScreen>
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
-                        style: const TextStyle(color: AppColors.onBackground),
+                        style: TextStyle(color: colorScheme.onBackground),
                         decoration: InputDecoration(
                           labelText: 'Password',
                           labelStyle: TextStyle(
-                            color: AppColors.onBackground.withOpacity(0.7),
+                            color: colorScheme.onBackground.withOpacity(0.7),
                           ),
                           prefixIcon: Icon(
                             Icons.lock_outline,
-                            color: AppColors.primary,
+                            color: colorScheme.primary,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceVariant.withOpacity(0.1),
+                          fillColor: colorScheme.surfaceVariant.withOpacity(0.1),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -226,27 +248,27 @@ class _LoginScreenState extends State<LoginScreen>
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.surfaceVariant.withOpacity(0.2),
+                              color: colorScheme.surfaceVariant.withOpacity(0.2),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.primary,
+                              color: colorScheme.primary,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
                           focusedErrorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: AppColors.error,
+                              color: colorScheme.error,
                               width: 2,
                             ),
                           ),
@@ -255,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen>
                               _obscurePassword
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
-                              color: AppColors.onBackground.withOpacity(0.7),
+                              color: colorScheme.onBackground.withOpacity(0.7),
                             ),
                             onPressed: () {
                               setState(() {
@@ -279,8 +301,8 @@ class _LoginScreenState extends State<LoginScreen>
                       ElevatedButton(
                         onPressed: _isLoading ? null : _handleLogin,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.onPrimary,
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -288,13 +310,13 @@ class _LoginScreenState extends State<LoginScreen>
                           elevation: 0,
                         ),
                         child: _isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppColors.onPrimary,
+                                    colorScheme.onPrimary,
                                   ),
                                 ),
                               )
@@ -307,24 +329,92 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                       ),
                       const SizedBox(height: 16),
+                      // Guest Login Button
+                      OutlinedButton.icon(
+                        onPressed: _isGuestLoading ? null : _handleGuestLogin,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: colorScheme.primary,
+                          side: BorderSide(color: colorScheme.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: _isGuestLoading
+                            ? SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    colorScheme.primary,
+                                  ),
+                                ),
+                              )
+                            : Icon(Icons.person_outline),
+                        label: Text(
+                          _isGuestLoading ? 'Loading...' : 'Continue as Guest',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Guest Info Text
+                      Text(
+                        'Browse movies without creating an account.\nYour data will be stored locally.',
+                        style: TextStyle(
+                          color: colorScheme.onBackground.withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      // Divider
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: colorScheme.onBackground.withOpacity(0.2),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                color: colorScheme.onBackground.withOpacity(0.5),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: colorScheme.onBackground.withOpacity(0.2),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
                       // Register Link
                       TextButton(
                         onPressed: () => context.go('/register'),
                         style: TextButton.styleFrom(
-                          foregroundColor: AppColors.primary,
+                          foregroundColor: colorScheme.primary,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         child: RichText(
                           text: TextSpan(
                             text: "Don't have an account? ",
                             style: TextStyle(
-                              color: AppColors.onBackground.withOpacity(0.7),
+                              color: colorScheme.onBackground.withOpacity(0.7),
                             ),
                             children: [
                               TextSpan(
                                 text: 'Register',
-                                style: const TextStyle(
-                                  color: AppColors.primary,
+                                style: TextStyle(
+                                  color: colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

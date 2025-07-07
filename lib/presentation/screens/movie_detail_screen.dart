@@ -8,7 +8,8 @@ import 'package:mivi/presentation/widgets/movie_info_section.dart';
 import 'package:mivi/presentation/widgets/cast_list.dart';
 import 'package:mivi/presentation/widgets/movie_list.dart';
 import 'package:mivi/presentation/core/app_colors.dart';
-import 'trailer_player_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'enhanced_trailer_player_screen.dart';
 import 'VideoPlayerScreen.dart';
 
 class MovieDetailScreen extends StatefulWidget {
@@ -131,7 +132,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 CircularProgressIndicator(color: Colors.red),
                 const SizedBox(height: 16),
                 Text(
-                  'Đang tải trailer...',
+                  'Đang tìm trailer...',
                   style: TextStyle(color: Colors.white),
                 ),
               ],
@@ -156,25 +157,30 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
               children: [
                 Icon(Icons.check_circle, color: Colors.green),
                 const SizedBox(width: 8),
-                Text('Đã tìm thấy trailer!'),
+                Text('Đã tìm thấy trailer! Đang mở YouTube...'),
               ],
             ),
             backgroundColor: Colors.green[700],
-            duration: Duration(milliseconds: 800),
+            duration: Duration(milliseconds: 1500),
             behavior: SnackBarBehavior.floating,
           ),
         );
 
-        // Wait a bit for snackbar then navigate
-        await Future.delayed(Duration(milliseconds: 300));
+        // Wait a bit for snackbar then open YouTube
+        await Future.delayed(Duration(milliseconds: 500));
 
         if (mounted) {
-          // Chuyển sang màn TrailerPlayerScreen và chờ khi pop về
-          await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => TrailerPlayerScreen(youtubeKey: youtubeKey),
-            ),
-          );
+          // Mở trực tiếp YouTube
+          final url = Uri.parse('https://www.youtube.com/watch?v=$youtubeKey');
+          try {
+            if (await canLaunchUrl(url)) {
+              await launchUrl(url, mode: LaunchMode.externalApplication);
+            } else {
+              _showErrorSnackBar('❌ Không thể mở YouTube');
+            }
+          } catch (e) {
+            _showErrorSnackBar('❌ Lỗi mở YouTube: ${e.toString()}');
+          }
         }
       } else if (mounted) {
         _showErrorSnackBar('❌ Không tìm thấy trailer cho phim này');
@@ -186,7 +192,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       }
       if (mounted) {
         _showErrorSnackBar(
-          '⚠️ Lỗi khi tải trailer: ${e.toString().contains('Exception:') ? e.toString().split('Exception: ')[1] : e.toString()}',
+          '⚠️ Lỗi khi tìm trailer: ${e.toString().contains('Exception:') ? e.toString().split('Exception: ')[1] : e.toString()}',
         );
       }
     }
@@ -205,7 +211,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).colorScheme.background,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null

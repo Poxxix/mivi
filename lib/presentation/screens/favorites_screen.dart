@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mivi/data/mock_data/mock_movies.dart';
 import 'package:mivi/data/models/movie_model.dart';
 import 'package:mivi/presentation/widgets/movie_list.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -47,10 +46,11 @@ class _FavoritesScreenState extends State<FavoritesScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final favorites = MockMovies.favoriteMovies;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.background,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SafeArea(
@@ -58,7 +58,7 @@ class _FavoritesScreenState extends State<FavoritesScreen>
             slivers: [
               // Enhanced App Bar
               SliverAppBar(
-                backgroundColor: AppColors.background,
+                backgroundColor: colorScheme.background,
                 floating: true,
                 expandedHeight: 100,
                 flexibleSpace: FlexibleSpaceBar(
@@ -68,8 +68,8 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          AppColors.background,
-                          AppColors.background.withOpacity(0.8),
+                          colorScheme.background,
+                          colorScheme.background.withOpacity(0.8),
                         ],
                       ),
                     ),
@@ -82,12 +82,12 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
+                          color: colorScheme.error.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
                           Icons.favorite,
-                          color: AppColors.error,
+                          color: colorScheme.error,
                           size: 24,
                         ),
                       ),
@@ -99,7 +99,7 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                           Text(
                             'Favorites',
                             style: TextStyle(
-                              color: AppColors.onBackground,
+                              color: colorScheme.onBackground,
                               fontWeight: FontWeight.bold,
                               fontSize: 24,
                               letterSpacing: 0.5,
@@ -109,7 +109,7 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                             Text(
                               '${favorites.length} movie${favorites.length == 1 ? '' : 's'}',
                               style: TextStyle(
-                                color: AppColors.onBackground.withOpacity(0.7),
+                                color: colorScheme.onBackground.withOpacity(0.7),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -126,7 +126,7 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                   ? SliverFillRemaining(
                       child: SlideTransition(
                         position: _slideAnimation,
-                        child: _buildEmptyState(),
+                        child: _buildEmptyState(context),
                       ),
                     )
                   : SliverToBoxAdapter(
@@ -151,7 +151,9 @@ class _FavoritesScreenState extends State<FavoritesScreen>
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -161,20 +163,20 @@ class _FavoritesScreenState extends State<FavoritesScreen>
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: colorScheme.error.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.favorite_border_outlined,
                 size: 80,
-                color: AppColors.error,
+                color: colorScheme.error,
               ),
             ),
             const SizedBox(height: 32),
             Text(
               'No Favorites Yet',
               style: TextStyle(
-                color: AppColors.onBackground,
+                color: colorScheme.onBackground,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
@@ -183,7 +185,7 @@ class _FavoritesScreenState extends State<FavoritesScreen>
             Text(
               'Movies you love will appear here.\nStart exploring and add some favorites!',
               style: TextStyle(
-                color: AppColors.onBackground.withOpacity(0.7),
+                color: colorScheme.onBackground.withOpacity(0.7),
                 fontSize: 16,
                 height: 1.5,
               ),
@@ -193,21 +195,22 @@ class _FavoritesScreenState extends State<FavoritesScreen>
             ElevatedButton.icon(
               onPressed: () => context.go('/'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.onPrimary,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                elevation: 0,
               ),
-              icon: const Icon(Icons.explore_outlined),
+              icon: const Icon(Icons.explore),
               label: const Text(
                 'Explore Movies',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],

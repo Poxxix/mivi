@@ -1,62 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
 
 class CustomSearchBar extends StatelessWidget {
-  final TextEditingController? controller;
+  final String hintText;
   final Function(String)? onChanged;
-  final Function(String)? onSubmitted;
-  final String? hintText;
-  final Widget? prefixIcon;
-  final Widget? suffixIcon;
-  final bool autofocus;
+  final VoidCallback? onTap;
+  final bool readOnly;
 
   const CustomSearchBar({
     super.key,
-    this.controller,
+    this.hintText = 'Search movies...',
     this.onChanged,
-    this.onSubmitted,
-    this.hintText,
-    this.prefixIcon,
-    this.suffixIcon,
-    this.autofocus = false,
+    this.onTap,
+    this.readOnly = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.1),
+        color: colorScheme.surface.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.outline.withOpacity(0.3),
+          color: colorScheme.outline.withOpacity(0.3),
+          width: 1,
         ),
       ),
       child: TextField(
-        controller: controller,
-        autofocus: autofocus,
         onChanged: onChanged,
-        onSubmitted: onSubmitted,
-        style: const TextStyle(
-          color: AppColors.onSurface,
-          fontSize: 16,
-        ),
+        onTap: onTap,
+        readOnly: readOnly,
         decoration: InputDecoration(
-          hintText: hintText ?? 'Search movies...',
+          hintText: hintText,
           hintStyle: TextStyle(
-            color: AppColors.onSurface.withOpacity(0.6),
-            fontSize: 16,
+            color: colorScheme.onSurface.withOpacity(0.6),
           ),
-          prefixIcon: prefixIcon ??
-              Icon(
-                Icons.search,
-                color: AppColors.onSurface.withOpacity(0.6),
-              ),
-          suffixIcon: suffixIcon,
+          prefixIcon: Icon(
+            Icons.search,
+            color: colorScheme.onSurface.withOpacity(0.6),
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 12,
           ),
+        ),
+        style: TextStyle(
+          color: colorScheme.onSurface,
         ),
       ),
     );

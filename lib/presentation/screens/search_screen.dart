@@ -8,7 +8,6 @@ import 'package:mivi/data/repositories/movie_repository.dart';
 import 'package:mivi/presentation/blocs/movie_bloc.dart';
 import 'package:mivi/presentation/widgets/search_bar.dart' as custom;
 import 'package:mivi/presentation/widgets/movie_list.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -93,8 +92,10 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.background,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -106,10 +107,10 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: colorScheme.background,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.surface.withOpacity(0.1),
+                        color: colorScheme.surface.withOpacity(0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -122,13 +123,13 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceVariant.withOpacity(0.1),
+                              color: colorScheme.surfaceVariant.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: IconButton(
                               icon: Icon(
                                 Icons.arrow_back_rounded,
-                                color: AppColors.onBackground,
+                                color: colorScheme.onBackground,
                               ),
                               onPressed: () => context.pop(),
                             ),
@@ -137,7 +138,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                           Text(
                             'Search Movies',
                             style: TextStyle(
-                              color: AppColors.onBackground,
+                              color: colorScheme.onBackground,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
@@ -148,31 +149,31 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                       // Enhanced Search Field
                       Container(
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceVariant.withOpacity(0.1),
+                          color: colorScheme.surfaceVariant.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: AppColors.surfaceVariant.withOpacity(0.2),
+                            color: colorScheme.surfaceVariant.withOpacity(0.2),
                           ),
                         ),
                         child: TextField(
                           controller: _controller,
-                          style: TextStyle(color: AppColors.onBackground),
+                          style: TextStyle(color: colorScheme.onBackground),
                           autofocus: true,
                           decoration: InputDecoration(
                             hintText: 'Search for movies...',
                             hintStyle: TextStyle(
-                              color: AppColors.onBackground.withOpacity(0.5),
+                              color: colorScheme.onBackground.withOpacity(0.5),
                             ),
                             prefixIcon: Icon(
                               Icons.search_rounded,
-                              color: AppColors.primary,
+                              color: colorScheme.primary,
                               size: 24,
                             ),
                             suffixIcon: _query.isNotEmpty
                                 ? IconButton(
                                     icon: Icon(
                                       Icons.clear_rounded,
-                                      color: AppColors.onBackground.withOpacity(0.7),
+                                      color: colorScheme.onBackground.withOpacity(0.7),
                                     ),
                                     onPressed: _clearSearch,
                                   )
@@ -193,8 +194,8 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
               // Search Results
               Expanded(
                 child: _query.isEmpty
-                    ? _buildEmptyState()
-                    : _buildSearchResults(),
+                    ? _buildEmptyState(context)
+                    : _buildSearchResults(context),
               ),
             ],
           ),
@@ -203,99 +204,165 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return SlideTransition(
       position: _slideAnimation,
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.search_rounded,
-                  size: 48,
-                  color: AppColors.primary,
-                ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+            // Search Icon with Animation
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Search for Movies',
-                style: TextStyle(
-                  color: AppColors.onBackground,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Icon(
+                Icons.search_rounded,
+                size: 64,
+                color: colorScheme.primary,
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Find your favorite movies by searching for titles, actors, or genres',
-                style: TextStyle(
-                  color: AppColors.onBackground.withOpacity(0.7),
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'Discover Amazing Movies',
+              style: TextStyle(
+                color: colorScheme.onBackground,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Search for your favorite movies, actors, or genres\nand find something amazing to watch tonight.',
+              style: TextStyle(
+                color: colorScheme.onBackground.withOpacity(0.7),
+                fontSize: 16,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+            _buildPopularSearches(context),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildSearchResults() {
+  Widget _buildPopularSearches(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final popularSearches = [
+      'Marvel', 'DC Comics', 'Horror', 'Comedy', 'Action',
+      'Drama', 'Sci-Fi', 'Romance', 'Thriller', 'Animation'
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Popular Searches',
+          style: TextStyle(
+            color: colorScheme.onBackground,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: popularSearches.map((search) {
+            return GestureDetector(
+              onTap: () {
+                _controller.text = search;
+                _onSearchChanged(search);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceVariant.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: colorScheme.surfaceVariant.withOpacity(0.2),
+                  ),
+                ),
+                child: Text(
+                  search,
+                  style: TextStyle(
+                    color: colorScheme.onBackground,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchResults(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return BlocBuilder<MovieBloc, MovieState>(
       bloc: _searchBloc,
       builder: (context, state) {
         if (state is MovieLoading) {
-          return _buildLoadingState();
+          return _buildLoadingState(context);
         } else if (state is MovieLoaded) {
           if (state.movies.isEmpty) {
-            return _buildNoResults();
+            return _buildNoResultsState(context);
           }
-          return _buildResultsList(state.movies);
+          return _buildResultsList(context, state.movies);
         } else if (state is MovieError) {
-          return _buildErrorState(state.message);
+          return _buildErrorState(context, state.message);
         }
         return const SizedBox.shrink();
       },
     );
   }
 
-  Widget _buildLoadingState() {
+  Widget _buildLoadingState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 20),
           Text(
-            'Searching for "$_query"...',
+            'Searching...',
             style: TextStyle(
-              color: AppColors.onBackground,
+              color: colorScheme.onBackground,
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Expanded(
-            child: ListView.builder(
-              itemCount: 5,
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.65,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+              ),
+              itemCount: 6,
               itemBuilder: (context, index) {
                 return Shimmer.fromColors(
-                  baseColor: Colors.grey[300]!,
-                  highlightColor: Colors.grey[100]!,
+                  baseColor: colorScheme.surfaceVariant,
+                  highlightColor: colorScheme.surface,
                   child: Container(
-                    height: 120,
-                    margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      color: colorScheme.surfaceVariant,
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 );
@@ -307,42 +374,53 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildNoResults() {
-    return Center(
+  Widget _buildNoResultsState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return SlideTransition(
+      position: _slideAnimation,
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.search_off_rounded,
-                size: 48,
-                color: Colors.orange,
-              ),
+            Icon(
+              Icons.search_off_rounded,
+              size: 80,
+              color: colorScheme.onBackground.withOpacity(0.5),
             ),
             const SizedBox(height: 24),
             Text(
               'No Results Found',
               style: TextStyle(
-                color: AppColors.onBackground,
+                color: colorScheme.onBackground,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Try searching with different keywords or check your spelling',
+              'We couldn\'t find any movies matching "$_query".\nTry searching with different keywords.',
               style: TextStyle(
-                color: AppColors.onBackground.withOpacity(0.7),
+                color: colorScheme.onBackground.withOpacity(0.7),
                 fontSize: 16,
+                height: 1.5,
               ),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _clearSearch,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
             ),
           ],
         ),
@@ -350,94 +428,110 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildResultsList(List<Movie> movies) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
+  Widget _buildResultsList(BuildContext context, List<Movie> movies) {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Found ${movies.length} result${movies.length == 1 ? '' : 's'}',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onBackground,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.65,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                ),
+                itemCount: movies.length,
+                itemBuilder: (context, index) {
+                  final movie = movies[index];
+                  return GestureDetector(
+                    onTap: () => _onMovieTap(movie),
+                    child: _buildMovieCard(context, movie),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMovieCard(BuildContext context, Movie movie) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${movies.length} results for "$_query"',
-            style: TextStyle(
-              color: AppColors.onBackground,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: Image.network(
+                movie.posterPath,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: double.infinity,
+                    color: colorScheme.surfaceVariant,
+                    child: Icon(
+                      Icons.movie,
+                      size: 48,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: movies.length,
-              itemBuilder: (context, index) {
-                final movie = movies[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceVariant.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  movie.title,
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(12),
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        movie.posterPath,
-                        width: 60,
-                        height: 90,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 60,
-                            height: 90,
-                            color: AppColors.surfaceVariant,
-                            child: Icon(
-                              Icons.movie,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    title: Text(
-                      movie.title,
-                      style: TextStyle(
-                        color: AppColors.onBackground,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text(
-                          movie.releaseYear,
-                          style: TextStyle(
-                            color: AppColors.onBackground.withOpacity(0.7),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              movie.voteAverage.toStringAsFixed(1),
-                              style: TextStyle(
-                                color: AppColors.onBackground.withOpacity(0.7),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    onTap: () => _onMovieTap(movie),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  movie.releaseYear,
+                  style: TextStyle(
+                    color: colorScheme.onSurface.withOpacity(0.7),
+                    fontSize: 12,
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
         ],
@@ -445,30 +539,26 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildErrorState(String message) {
-    return Center(
+  Widget _buildErrorState(BuildContext context, String message) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return SlideTransition(
+      position: _slideAnimation,
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.error_outline_rounded,
-                size: 48,
-                color: Colors.red,
-              ),
+            Icon(
+              Icons.error_outline,
+              size: 80,
+              color: colorScheme.error,
             ),
             const SizedBox(height: 24),
             Text(
               'Search Error',
               style: TextStyle(
-                color: AppColors.onBackground,
+                color: colorScheme.onBackground,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -477,24 +567,25 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
             Text(
               message,
               style: TextStyle(
-                color: AppColors.onBackground.withOpacity(0.7),
+                color: colorScheme.onBackground.withOpacity(0.7),
                 fontSize: 16,
+                height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () {
-                if (_query.trim().isNotEmpty) {
-                  _searchBloc.add(SearchMovies(_query.trim()));
-                }
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              onPressed: () => _onSearchChanged(_query),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry Search'),
             ),
           ],
         ),

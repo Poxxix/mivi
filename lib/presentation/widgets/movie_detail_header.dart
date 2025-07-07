@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mivi/data/models/movie_model.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
 
 class MovieDetailHeader extends StatelessWidget {
   final Movie movie;
@@ -31,11 +30,12 @@ class MovieDetailHeader extends StatelessWidget {
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
               return Container(
-                color: AppColors.surfaceVariant,
-                child: const Icon(
+                height: double.infinity,
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                child: Icon(
                   Icons.movie,
                   size: 64,
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               );
             },
@@ -152,7 +152,7 @@ class MovieDetailHeader extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
+                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Row(
@@ -212,7 +212,7 @@ class MovieDetailHeader extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.85),
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.85),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(

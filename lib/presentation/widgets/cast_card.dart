@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mivi/data/models/movie_model.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
 
 class CastCard extends StatelessWidget {
   final CastMember castMember;
@@ -14,12 +13,14 @@ class CastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 120,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -35,11 +36,11 @@ class CastCard extends StatelessWidget {
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     height: 120,
-                    color: AppColors.surfaceVariant,
-                    child: const Icon(
+                    color: colorScheme.surfaceVariant,
+                    child: Icon(
                       Icons.person,
                       size: 48,
-                      color: AppColors.onSurfaceVariant,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   );
                 },
@@ -52,8 +53,8 @@ class CastCard extends StatelessWidget {
                 children: [
                   Text(
                     castMember.name,
-                    style: const TextStyle(
-                      color: AppColors.onSurface,
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
@@ -62,8 +63,8 @@ class CastCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     castMember.character,
-                    style: const TextStyle(
-                      color: AppColors.onSurfaceVariant,
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 12,
                     ),
                     maxLines: 1,

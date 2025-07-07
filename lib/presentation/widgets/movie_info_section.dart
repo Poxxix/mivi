@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mivi/data/models/movie_model.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
 import 'package:mivi/presentation/widgets/genre_chip.dart';
 
 class MovieInfoSection extends StatelessWidget {
@@ -13,18 +12,20 @@ class MovieInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Overview
-          const Text(
+          Text(
             'Overview',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.onSurface,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -32,52 +33,59 @@ class MovieInfoSection extends StatelessWidget {
             movie.overview,
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.onSurface.withOpacity(0.8),
+              color: colorScheme.onSurface.withOpacity(0.8),
               height: 1.5,
             ),
           ),
           const SizedBox(height: 16),
           // Genres
-          const Text(
+          Text(
             'Genres',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.onSurface,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: movie.genres.map((genre) {
-              return GenreChip(genre: genre);
+            children: movie.genres.map<Widget>((genre) {
+              return GenreChip(
+                genre: genre,
+                isSelected: false, // Read-only display
+                onTap: () {}, // No interaction needed
+              );
             }).toList(),
           ),
           const SizedBox(height: 16),
           // Additional Info
-          const Text(
+          Text(
             'Additional Info',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.onSurface,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
-          _buildInfoRow('Status', movie.status ?? 'Unknown'),
+          _buildInfoRow(context, 'Status', movie.status ?? 'Unknown'),
           _buildInfoRow(
+            context,
             'Original Language',
             movie.originalLanguage?.toUpperCase() ?? 'Unknown',
           ),
-          _buildInfoRow('Budget', movie.formattedBudget),
-          _buildInfoRow('Revenue', movie.formattedRevenue),
+          _buildInfoRow(context, 'Budget', movie.formattedBudget),
+          _buildInfoRow(context, 'Revenue', movie.formattedRevenue),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -89,16 +97,16 @@ class MovieInfoSection extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 14,
-                color: AppColors.onSurface.withOpacity(0.7),
+                color: colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppColors.onSurface,
+                color: colorScheme.onSurface,
               ),
             ),
           ),

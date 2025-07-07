@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String name;
@@ -19,15 +18,19 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -37,16 +40,14 @@ class ProfileHeader extends StatelessWidget {
             children: [
               // Avatar
               CircleAvatar(
-                radius: 40,
-                backgroundColor: AppColors.surfaceVariant,
-                backgroundImage: avatarUrl != null
-                    ? NetworkImage(avatarUrl!)
-                    : null,
+                radius: 30,
+                backgroundColor: colorScheme.surfaceVariant,
+                backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
                 child: avatarUrl == null
-                    ? const Icon(
+                    ? Icon(
                         Icons.person,
-                        size: 40,
-                        color: AppColors.onSurfaceVariant,
+                        size: 30,
+                        color: colorScheme.onSurfaceVariant,
                       )
                     : null,
               ),
@@ -58,10 +59,10 @@ class ProfileHeader extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(
-                        fontSize: 24,
+                      style: TextStyle(
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.onSurface,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -69,7 +70,7 @@ class ProfileHeader extends StatelessWidget {
                       email,
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.onSurface.withOpacity(0.7),
+                        color: colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
                   ],
@@ -79,9 +80,9 @@ class ProfileHeader extends StatelessWidget {
               if (onEditProfile != null)
                 IconButton(
                   onPressed: onEditProfile,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.edit,
-                    color: AppColors.primary,
+                    color: colorScheme.primary,
                   ),
                 ),
             ],
@@ -94,14 +95,14 @@ class ProfileHeader extends StatelessWidget {
               width: double.infinity,
               child: TextButton.icon(
                 onPressed: onLogout,
-                icon: const Icon(
+                icon: Icon(
                   Icons.logout,
-                  color: AppColors.error,
+                  color: colorScheme.error,
                 ),
-                label: const Text(
+                label: Text(
                   'Logout',
                   style: TextStyle(
-                    color: AppColors.error,
+                    color: colorScheme.error,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

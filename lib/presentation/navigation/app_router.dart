@@ -9,27 +9,51 @@ import 'package:mivi/presentation/screens/auth/login_screen.dart';
 import 'package:mivi/presentation/screens/auth/register_screen.dart';
 import 'package:mivi/data/mock_data/mock_movies.dart';
 import 'package:mivi/data/models/movie_model.dart';
+import 'package:mivi/data/services/guest_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppRouter {
+  static final GuestService _guestService = GuestService();
+  
   static final router = GoRouter(
-    initialLocation: '/login',
-    // Temporarily disable redirect logic for testing
-    // redirect: (context, state) {
-    //   // TODO: Implement actual auth state check
-    //   final isLoggedIn = false; // This should come from your auth state management
-    //   final isAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+    initialLocation: '/loading',
+    redirect: (context, state) async {
+      // Initialize guest service
+      await _guestService.initialize();
+      
+      final isLoggedIn = Supabase.instance.client.auth.currentUser != null;
+      final isGuestMode = _guestService.isGuestMode;
+      final isAuthRoute = state.matchedLocation == '/login' || 
+                         state.matchedLocation == '/register';
+      final isLoadingRoute = state.matchedLocation == '/loading';
 
-    //   if (!isLoggedIn && !isAuthRoute) {
-    //     return '/login';
-    //   }
+      // If on loading route, redirect based on auth status
+      if (isLoadingRoute) {
+        if (isLoggedIn || isGuestMode) {
+          return '/';
+        } else {
+          return '/login';
+        }
+      }
 
-    //   if (isLoggedIn && isAuthRoute) {
-    //     return '/';
-    //   }
+      // If not logged in and not guest, redirect to login (except for auth routes)
+      if (!isLoggedIn && !isGuestMode && !isAuthRoute) {
+        return '/login';
+      }
 
-    //   return null;
-    // },
+      // If logged in or guest and trying to access auth routes, redirect to home
+      if ((isLoggedIn || isGuestMode) && isAuthRoute) {
+        return '/';
+      }
+
+      return null;
+    },
     routes: [
+      // Loading route
+      GoRoute(
+        path: '/loading',
+        builder: (context, state) => const LoadingScreen(),
+      ),
       // Auth routes
       GoRoute(
         path: '/login',
@@ -78,52 +102,136 @@ class AppRouter {
   );
 }
 
-class ScaffoldWithBottomNav extends StatelessWidget {
-  const ScaffoldWithBottomNav({
-    super.key,
-    required this.child,
-  });
-
-  final Widget child;
+// Loading screen widget
+class LoadingScreen extends StatelessWidget {
+  const LoadingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Scaffold(
+      backgroundColor: colorScheme.background,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.movie_creation_outlined,
+                size: 64,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'Mivi',
+              style: TextStyle(
+                color: colorScheme.onBackground,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            CircularProgressIndicator(
+              color: colorScheme.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading...',
+              style: TextStyle(
+                color: colorScheme.onBackground.withOpacity(0.7),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ScaffoldWithBottomNav extends StatelessWidget {
+  final Widget child;
+
+  const ScaffoldWithBottomNav({required this.child, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
       body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _calculateSelectedIndex(context),
-        onDestinationSelected: (int idx) => _onItemTapped(idx, context),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: colorScheme.surface,
+          selectedItemColor: colorScheme.primary,
+          unselectedItemColor: colorScheme.onSurface.withOpacity(0.6),
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
           ),
-          NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
-            label: 'Search',
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
           ),
-          NavigationDestination(
-            icon: Icon(Icons.favorite_outline),
-            selectedIcon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+          elevation: 0,
+          currentIndex: _calculateSelectedIndex(context),
+          onTap: (int index) => _onItemTapped(index, context),
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search_outlined),
+              activeIcon: Icon(Icons.search),
+              label: 'Search',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_outline),
+              activeIcon: Icon(Icons.favorite),
+              label: 'Favorites',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  int _calculateSelectedIndex(BuildContext context) {
-    final String path = GoRouterState.of(context).uri.path;
-    if (path.startsWith('/search')) return 1;
-    if (path.startsWith('/favorites')) return 2;
-    if (path.startsWith('/profile')) return 3;
+  static int _calculateSelectedIndex(BuildContext context) {
+    final String location = GoRouterState.of(context).matchedLocation;
+    if (location.startsWith('/search')) {
+      return 1;
+    }
+    if (location.startsWith('/favorites')) {
+      return 2;
+    }
+    if (location.startsWith('/profile')) {
+      return 3;
+    }
     return 0;
   }
 

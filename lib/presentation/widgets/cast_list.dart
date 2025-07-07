@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mivi/data/models/movie_model.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
 import 'package:mivi/presentation/widgets/cast_card.dart';
 
 class CastList extends StatelessWidget {
@@ -17,6 +16,8 @@ class CastList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     if (cast.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -26,8 +27,8 @@ class CastList extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
           child: Text(
             title,
-            style: const TextStyle(
-              color: AppColors.onBackground,
+            style: TextStyle(
+              color: colorScheme.onBackground,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
