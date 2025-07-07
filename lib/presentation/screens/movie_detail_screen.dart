@@ -9,6 +9,7 @@ import 'package:mivi/presentation/widgets/cast_list.dart';
 import 'package:mivi/presentation/widgets/movie_list.dart';
 import 'package:mivi/presentation/core/app_colors.dart';
 import 'trailer_player_screen.dart';
+import 'VideoPlayerScreen.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final Movie movie;
@@ -74,8 +75,41 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   }
 
   Future<void> _onPlayPressed() async {
-    // Nút play trên ảnh: Hiển thị thông báo chức năng đang phát triển
-    _showErrorSnackBar('Chức năng đang phát triển');
+    // Kiểm tra ID phim và điều hướng tới VideoPlayerScreen nếu đúng
+    if (_movie.id == 749170) {
+      const supabaseVideoUrl =
+          'https://rxjhrphnwelxufmtnldh.supabase.co/storage/v1/object/public/movies/Inception%20-%20Planning%20scene%20(HQ).mp4';
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VideoPlayerScreen(videoUrl: supabaseVideoUrl),
+        ),
+      );
+    }
+    //how to train to dragon
+    if (_movie.id == 1087192) {
+      const supabaseVideoUrl =
+          'https://rxjhrphnwelxufmtnldh.supabase.co/storage/v1/object/public/movies//videoplayback.mp4';
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VideoPlayerScreen(videoUrl: supabaseVideoUrl),
+        ),
+      );
+    }
+    //the godfather
+    if (_movie.id == 238) {
+      const supabaseVideoUrl =
+          'https://rxjhrphnwelxufmtnldh.supabase.co/storage/v1/object/public/movies//videoplayback%20(1).mp4';
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VideoPlayerScreen(videoUrl: supabaseVideoUrl),
+        ),
+      );
+    } else {
+      _showErrorSnackBar('❌ Chưa có video cho phim này!');
+    }
   }
 
   Future<void> _onWatchTrailerPressed() async {
