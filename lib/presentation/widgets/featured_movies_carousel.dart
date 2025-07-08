@@ -70,17 +70,7 @@ class _FeaturedMoviesCarouselState extends State<FeaturedMoviesCarousel>
     });
   }
 
-  void _pauseAutoPlay() {
-    setState(() {
-      _isAutoPlay = false;
-    });
-  }
 
-  void _resumeAutoPlay() {
-    setState(() {
-      _isAutoPlay = true;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,49 +100,12 @@ class _FeaturedMoviesCarouselState extends State<FeaturedMoviesCarousel>
                   onTap: () {
                     widget.onMovieTap?.call(movie);
                   },
-                  onTapDown: (_) => _pauseAutoPlay(),
-                  onTapUp: (_) => _resumeAutoPlay(),
-                  onTapCancel: () => _resumeAutoPlay(),
                   child: _buildCarouselItem(movie, index == _currentIndex),
                 );
               },
             ),
             
-            // Auto-play indicator
-            Positioned(
-              top: 16,
-              right: 16,
-              child: AnimatedOpacity(
-                opacity: _isAutoPlay ? 1.0 : 0.5,
-                duration: const Duration(milliseconds: 300),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _isAutoPlay ? Icons.play_circle_filled : Icons.pause_circle_filled,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _isAutoPlay ? 'AUTO' : 'PAUSED',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+
             
             // Page indicators
             Positioned(
@@ -162,53 +115,7 @@ class _FeaturedMoviesCarouselState extends State<FeaturedMoviesCarousel>
               child: _buildPageIndicators(),
             ),
             
-            // Navigation buttons
-            Positioned(
-              left: 16,
-              top: 0,
-              bottom: 0,
-              child: Center(
-                child: _buildNavButton(
-                  icon: Icons.chevron_left,
-                  onTap: () {
-                    _pauseAutoPlay();
-                    final prevIndex = _currentIndex == 0 
-                        ? widget.movies.length - 1 
-                        : _currentIndex - 1;
-                    _pageController.animateToPage(
-                      prevIndex,
-                      duration: widget.animationDuration,
-                      curve: Curves.easeInOut,
-                    );
-                    Future.delayed(const Duration(seconds: 1), () {
-                      _resumeAutoPlay();
-                    });
-                  },
-                ),
-              ),
-            ),
-            Positioned(
-              right: 16,
-              top: 0,
-              bottom: 0,
-              child: Center(
-                child: _buildNavButton(
-                  icon: Icons.chevron_right,
-                  onTap: () {
-                    _pauseAutoPlay();
-                    final nextIndex = (_currentIndex + 1) % widget.movies.length;
-                    _pageController.animateToPage(
-                      nextIndex,
-                      duration: widget.animationDuration,
-                      curve: Curves.easeInOut,
-                    );
-                    Future.delayed(const Duration(seconds: 1), () {
-                      _resumeAutoPlay();
-                    });
-                  },
-                ),
-              ),
-            ),
+
           ],
         ),
       ),
@@ -432,22 +339,4 @@ class _FeaturedMoviesCarouselState extends State<FeaturedMoviesCarousel>
     );
   }
 
-  Widget _buildNavButton({required IconData icon, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.5),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 24,
-        ),
-      ),
-    );
-  }
 } 

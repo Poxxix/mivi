@@ -63,10 +63,10 @@ class ProfileMenuItem extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_right,
+                  Icons.chevron_right,
                 color: colorScheme.onSurfaceVariant,
                 size: 20,
-              ),
+                ),
             ],
           ),
         ),

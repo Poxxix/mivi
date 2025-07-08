@@ -18,22 +18,22 @@ class GenreChip extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
+        onTap: onTap,
+        child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
+          decoration: BoxDecoration(
           color: isSelected ? colorScheme.primary : colorScheme.surfaceVariant,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
+            border: Border.all(
             color: isSelected ? colorScheme.primary : colorScheme.outline,
-            width: 1,
+              width: 1,
+            ),
           ),
-        ),
-        child: Text(
-          genre.name,
-          style: TextStyle(
+          child: Text(
+            genre.name,
+            style: TextStyle(
             color: isSelected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             fontSize: 14,
           ),
         ),

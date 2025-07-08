@@ -66,7 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   Future<void> _fetchProfile() async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
+    final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {
         setState(() {
           _loading = false;
@@ -74,15 +74,15 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         return;
       }
       
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .single();
-      setState(() {
-        _profile = response;
-        _loading = false;
-      });
+    final response = await Supabase.instance.client
+        .from('profiles')
+        .select()
+        .eq('id', user.id)
+        .single();
+    setState(() {
+      _profile = response;
+      _loading = false;
+    });
     } catch (e) {
       setState(() {
         _loading = false;
@@ -229,25 +229,25 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   Widget _buildProfileHeader(ColorScheme colorScheme) {
     return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
+                    margin: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
         color: colorScheme.surfaceVariant.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
           color: colorScheme.surfaceVariant.withOpacity(0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Avatar
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                 colors: _isGuest
                     ? [
                         colorScheme.secondary,
@@ -256,31 +256,31 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     : [
                         colorScheme.primary,
                         colorScheme.primary.withOpacity(0.7),
-                      ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Icon(
               _isGuest ? Icons.person_outline : Icons.person,
-              size: 40,
+                            size: 40,
               color: _isGuest ? colorScheme.onSecondary : colorScheme.onPrimary,
-            ),
-          ),
-          const SizedBox(width: 20),
-          // User Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        // User Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
                   _profile?['username'] ?? 'Guest User',
-                  style: TextStyle(
+                                style: TextStyle(
                     color: colorScheme.onBackground,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
                 if (_isGuest)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -301,13 +301,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     ),
                   )
                 else
-                  Text(
-                    _profile?['email'] ?? '',
-                    style: TextStyle(
+                              Text(
+                                _profile?['email'] ?? '',
+                                style: TextStyle(
                       color: colorScheme.onBackground.withOpacity(0.7),
                       fontSize: 14,
-                    ),
-                  ),
+                                ),
+                              ),
                 const SizedBox(height: 8),
                 if (_isGuest)
                   Text(
@@ -315,21 +315,21 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     style: TextStyle(
                       color: colorScheme.onBackground.withOpacity(0.5),
                       fontSize: 12,
-                    ),
+                                ),
                   )
                 else
                   Text(
                     'Member since ${DateTime.now().year}',
-                    style: TextStyle(
+                                  style: TextStyle(
                       color: colorScheme.onBackground.withOpacity(0.5),
-                      fontSize: 12,
+                                    fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -379,7 +379,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               color: colorScheme.onBackground.withOpacity(0.7),
               fontSize: 14,
             ),
-          ),
+                      ),
           const SizedBox(height: 12),
           ...GuestService().getGuestLimitations().map((limitation) => 
             Padding(
@@ -400,11 +400,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         fontSize: 12,
                       ),
                     ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -416,17 +416,17 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                ),
+                      ),
               ),
               icon: const Icon(Icons.account_circle),
               label: const Text(
                 'Create Account',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                ),
               ),
-            ),
+              ),
           ),
+        ),
         ],
       ),
     );
@@ -598,42 +598,42 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
+                decoration: BoxDecoration(
           color: enabled 
               ? colorScheme.primary.withOpacity(0.1)
               : colorScheme.surfaceVariant.withOpacity(0.3),
           borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          icon,
+                ),
+                child: Icon(
+                  icon,
           color: enabled 
               ? colorScheme.primary
               : colorScheme.onSurface.withOpacity(0.4),
           size: 20,
-        ),
-      ),
+                ),
+              ),
       title: Text(
-        title,
-        style: TextStyle(
+                      title,
+                      style: TextStyle(
           color: enabled 
               ? colorScheme.onSurface
               : colorScheme.onSurface.withOpacity(0.4),
           fontWeight: FontWeight.w500,
-        ),
-      ),
+                      ),
+                    ),
       subtitle: Text(
         enabled ? subtitle : '$subtitle (Account required)',
-        style: TextStyle(
+                      style: TextStyle(
           color: colorScheme.onSurface.withOpacity(0.6),
           fontSize: 12,
-        ),
-      ),
+                      ),
+                    ),
       trailing: Icon(
         Icons.chevron_right,
         color: enabled 
             ? colorScheme.onSurface.withOpacity(0.6)
             : colorScheme.onSurface.withOpacity(0.3),
-      ),
+        ),
       onTap: enabled ? onTap : null,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
     );

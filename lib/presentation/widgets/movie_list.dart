@@ -130,15 +130,15 @@ class _MovieListState extends State<MovieList>
           child: Row(
             children: [
               Expanded(
-                child: Text(
+          child: Text(
                   widget.title,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onBackground,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
               // Navigation buttons
               if (widget.movies.length > 2) ...[
                 _buildNavButton(
@@ -164,13 +164,13 @@ class _MovieListState extends State<MovieList>
             children: [
               // Movie list with enhanced scrolling
               Positioned.fill(
-                child: ListView.builder(
+          child: ListView.builder(
                   controller: _scrollController,
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  physics: const BouncingScrollPhysics(),
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            physics: const BouncingScrollPhysics(),
                   itemCount: widget.movies.length,
-                  itemBuilder: (context, index) {
+            itemBuilder: (context, index) {
                     final movie = widget.movies[index];
                     
                     return AnimatedBuilder(
@@ -196,17 +196,17 @@ class _MovieListState extends State<MovieList>
                             child: Container(
                               width: _itemWidth,
                               margin: const EdgeInsets.only(right: _itemSpacing),
-                              child: MovieCard(
-                                movie: movie,
+                child: MovieCard(
+                  movie: movie,
                                 showFavoriteButton: widget.showFavoriteButton,
                                 onTap: widget.onMovieTap != null 
                                     ? () => widget.onMovieTap!(movie) 
                                     : null,
                               ),
                             ),
-                          ),
-                        );
-                      },
+                ),
+              );
+            },
                     );
                   },
                 ),

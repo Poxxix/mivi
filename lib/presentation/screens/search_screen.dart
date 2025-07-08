@@ -211,45 +211,45 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
       position: _slideAnimation,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
+          child: Column(
+            children: [
             const SizedBox(height: 40),
             // Search Icon with Animation
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
                 color: colorScheme.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.search_rounded,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.search_rounded,
                 size: 64,
                 color: colorScheme.primary,
               ),
             ),
             const SizedBox(height: 32),
-            Text(
+              Text(
               'Discover Amazing Movies',
-              style: TextStyle(
+                style: TextStyle(
                 color: colorScheme.onBackground,
                 fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+                  fontWeight: FontWeight.bold,
+                ),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
+              ),
+              const SizedBox(height: 12),
+              Text(
               'Search for your favorite movies, actors, or genres\nand find something amazing to watch tonight.',
-              style: TextStyle(
+                style: TextStyle(
                 color: colorScheme.onBackground.withOpacity(0.7),
-                fontSize: 16,
+                  fontSize: 16,
                 height: 1.5,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
             const SizedBox(height: 40),
             _buildPopularSearches(context),
-          ],
+            ],
         ),
       ),
     );
@@ -385,7 +385,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.search_off_rounded,
+                Icons.search_off_rounded,
               size: 80,
               color: colorScheme.onBackground.withOpacity(0.5),
             ),
@@ -432,20 +432,20 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     return SlideTransition(
       position: _slideAnimation,
       child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
               'Found ${movies.length} result${movies.length == 1 ? '' : 's'}',
-              style: TextStyle(
+            style: TextStyle(
                 color: Theme.of(context).colorScheme.onBackground,
-                fontSize: 18,
+              fontSize: 18,
                 fontWeight: FontWeight.w600,
-              ),
             ),
-            const SizedBox(height: 16),
-            Expanded(
+          ),
+          const SizedBox(height: 16),
+          Expanded(
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
@@ -453,9 +453,9 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
                 ),
-                itemCount: movies.length,
-                itemBuilder: (context, index) {
-                  final movie = movies[index];
+              itemCount: movies.length,
+              itemBuilder: (context, index) {
+                final movie = movies[index];
                   return GestureDetector(
                     onTap: () => _onMovieTap(movie),
                     child: _buildMovieCard(context, movie),
@@ -472,10 +472,10 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   Widget _buildMovieCard(BuildContext context, Movie movie) {
     final colorScheme = Theme.of(context).colorScheme;
     
-    return Container(
-      decoration: BoxDecoration(
+                return Container(
+                  decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -483,30 +483,30 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
             offset: const Offset(0, 2),
           ),
         ],
-      ),
+                  ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.network(
-                movie.posterPath,
+                      child: Image.network(
+                        movie.posterPath,
                 width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
                     width: double.infinity,
                     color: colorScheme.surfaceVariant,
-                    child: Icon(
-                      Icons.movie,
+                            child: Icon(
+                              Icons.movie,
                       size: 48,
                       color: colorScheme.onSurfaceVariant,
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  );
-                },
-              ),
-            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8),
@@ -514,24 +514,24 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  movie.title,
-                  style: TextStyle(
+                      movie.title,
+                      style: TextStyle(
                     color: colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                     fontSize: 14,
-                  ),
+                      ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  movie.releaseYear,
-                  style: TextStyle(
+                    ),
+                        const SizedBox(height: 4),
+                        Text(
+                          movie.releaseYear,
+                          style: TextStyle(
                     color: colorScheme.onSurface.withOpacity(0.7),
                     fontSize: 12,
-                  ),
-                ),
-              ],
+                              ),
+                            ),
+                          ],
             ),
           ),
         ],

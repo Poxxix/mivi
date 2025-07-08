@@ -38,9 +38,9 @@ class CustomSearchBar extends StatelessWidget {
             color: colorScheme.onSurface.withOpacity(0.6),
           ),
           prefixIcon: Icon(
-            Icons.search,
+                Icons.search,
             color: colorScheme.onSurface.withOpacity(0.6),
-          ),
+              ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
