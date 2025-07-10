@@ -88,6 +88,35 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  //login google
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'http://localhost:55559/',
+        queryParams: {'prompt': 'select_account'},
+      );
+      // Người dùng sẽ được chuyển hướng sang Google và quay lại sau khi đăng nhập
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In thất bại: [${e.message}]')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lỗi không xác định khi Google Sign-In!'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _handleGuestLogin() async {
     setState(() => _isGuestLoading = true);
     try {
@@ -97,7 +126,9 @@ class _LoginScreenState extends State<LoginScreen>
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Không thể tiếp tục với chế độ khách!')),
+            const SnackBar(
+              content: Text('Không thể tiếp tục với chế độ khách!'),
+            ),
           );
         }
       }
@@ -115,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
       backgroundColor: colorScheme.background,
       body: SafeArea(
@@ -181,7 +212,9 @@ class _LoginScreenState extends State<LoginScreen>
                             color: colorScheme.primary,
                           ),
                           filled: true,
-                          fillColor: colorScheme.surfaceVariant.withOpacity(0.1),
+                          fillColor: colorScheme.surfaceVariant.withOpacity(
+                            0.1,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -189,7 +222,9 @@ class _LoginScreenState extends State<LoginScreen>
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: colorScheme.surfaceVariant.withOpacity(0.2),
+                              color: colorScheme.surfaceVariant.withOpacity(
+                                0.2,
+                              ),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
@@ -240,7 +275,9 @@ class _LoginScreenState extends State<LoginScreen>
                             color: colorScheme.primary,
                           ),
                           filled: true,
-                          fillColor: colorScheme.surfaceVariant.withOpacity(0.1),
+                          fillColor: colorScheme.surfaceVariant.withOpacity(
+                            0.1,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -248,7 +285,9 @@ class _LoginScreenState extends State<LoginScreen>
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: colorScheme.surfaceVariant.withOpacity(0.2),
+                              color: colorScheme.surfaceVariant.withOpacity(
+                                0.2,
+                              ),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
@@ -329,6 +368,31 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                       ),
                       const SizedBox(height: 16),
+                      //login google button
+                      OutlinedButton.icon(
+                        onPressed: _isLoading ? null : _handleGoogleLogin,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: colorScheme.primary,
+                          side: BorderSide(color: colorScheme.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: Image.asset(
+                          'assets/icons/google.png', // Bạn cần thêm biểu tượng Google vào thư mục assets
+                          height: 20,
+                          width: 20,
+                        ),
+                        label: const Text(
+                          'Sign in with Google',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       // Guest Login Button
                       OutlinedButton.icon(
                         onPressed: _isGuestLoading ? null : _handleGuestLogin,
@@ -361,6 +425,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                       const SizedBox(height: 8),
+
                       // Guest Info Text
                       Text(
                         'Browse movies without creating an account.\nYour data will be stored locally.',
@@ -384,7 +449,9 @@ class _LoginScreenState extends State<LoginScreen>
                             child: Text(
                               'OR',
                               style: TextStyle(
-                                color: colorScheme.onBackground.withOpacity(0.5),
+                                color: colorScheme.onBackground.withOpacity(
+                                  0.5,
+                                ),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
