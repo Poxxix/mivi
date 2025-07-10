@@ -20,6 +20,8 @@ class EnhancedThemeProvider extends ChangeNotifier {
   ThemeMode get themeMode {
     switch (_currentTheme) {
       case AppThemeMode.dark:
+      case AppThemeMode.midnightBlack:
+      case AppThemeMode.oledDark:
         return ThemeMode.dark;
       case AppThemeMode.light:
       case AppThemeMode.white:
@@ -68,7 +70,9 @@ class EnhancedThemeProvider extends ChangeNotifier {
   List<AppThemeMode> get availableThemes => AppThemeMode.values;
 
   // Check if theme is dark
-  bool get isCurrentThemeDark => _currentTheme == AppThemeMode.dark;
+  bool get isCurrentThemeDark => _currentTheme == AppThemeMode.dark || 
+      _currentTheme == AppThemeMode.midnightBlack || 
+      _currentTheme == AppThemeMode.oledDark;
 
   // Get theme preview colors
   Color get primaryColor {
@@ -81,6 +85,10 @@ class EnhancedThemeProvider extends ChangeNotifier {
         return const Color(0xFF2563EB);
       case AppThemeMode.pinkLight:
         return const Color(0xFFEC4899);
+      case AppThemeMode.midnightBlack:
+        return const Color(0xFF7C3AED);
+      case AppThemeMode.oledDark:
+        return const Color(0xFF3B82F6);
     }
   }
 
@@ -94,6 +102,10 @@ class EnhancedThemeProvider extends ChangeNotifier {
         return Colors.white;
       case AppThemeMode.pinkLight:
         return const Color(0xFFFDF2F8);
+      case AppThemeMode.midnightBlack:
+        return const Color(0xFF000000);
+      case AppThemeMode.oledDark:
+        return const Color(0xFF000000);
     }
   }
 
@@ -107,6 +119,10 @@ class EnhancedThemeProvider extends ChangeNotifier {
         return Colors.white;
       case AppThemeMode.pinkLight:
         return const Color(0xFFFCE7F3);
+      case AppThemeMode.midnightBlack:
+        return const Color(0xFF111111);
+      case AppThemeMode.oledDark:
+        return const Color(0xFF0A0A0A);
     }
   }
 
@@ -121,6 +137,10 @@ class EnhancedThemeProvider extends ChangeNotifier {
         return 'Pure white minimalist design';
       case AppThemeMode.pinkLight:
         return 'Soft pink theme with warm tones';
+      case AppThemeMode.midnightBlack:
+        return 'Pure black theme for OLED displays';
+      case AppThemeMode.oledDark:
+        return 'Optimized for OLED screens';
     }
   }
 } 

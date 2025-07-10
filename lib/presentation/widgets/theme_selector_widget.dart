@@ -41,7 +41,9 @@ class _ThemeSelectorWidgetState extends State<ThemeSelectorWidget>
         return FadeTransition(
           opacity: _fadeAnimation,
           child: Container(
-            padding: const EdgeInsets.all(20),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: const BorderRadius.vertical(
@@ -50,8 +52,24 @@ class _ThemeSelectorWidgetState extends State<ThemeSelectorWidget>
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Handle bar
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                 // Header
                 Row(
                   children: [
@@ -92,7 +110,7 @@ class _ThemeSelectorWidgetState extends State<ThemeSelectorWidget>
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 
                 // Current Theme Info
                 Container(
@@ -170,7 +188,11 @@ class _ThemeSelectorWidgetState extends State<ThemeSelectorWidget>
                   ),
                 ),
                 
-                const SizedBox(height: 8),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -208,10 +230,20 @@ class _ThemeSelectorWidgetState extends State<ThemeSelectorWidget>
         backgroundColor = const Color(0xFFFDF2F8);
         surfaceColor = const Color(0xFFFCE7F3);
         break;
+      case AppThemeMode.midnightBlack:
+        primaryColor = const Color(0xFF7C3AED);
+        backgroundColor = const Color(0xFF000000);
+        surfaceColor = const Color(0xFF111111);
+        break;
+      case AppThemeMode.oledDark:
+        primaryColor = const Color(0xFF3B82F6);
+        backgroundColor = const Color(0xFF000000);
+        surfaceColor = const Color(0xFF0A0A0A);
+        break;
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: Colors.transparent,
         child: InkWell(

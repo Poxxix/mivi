@@ -5,7 +5,9 @@ enum AppThemeMode {
   dark,
   light,
   white,
-  pinkLight
+  pinkLight,
+  midnightBlack,
+  oledDark
 }
 
 class AppThemes {
@@ -420,6 +422,184 @@ class AppThemes {
     );
   }
 
+  // Midnight Black Theme - Pure black with blue accents
+  static ThemeData get midnightBlackTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF3B82F6), // Bright blue
+        onPrimary: Color(0xFF000000),
+        secondary: Color(0xFF1D4ED8), // Deep blue
+        onSecondary: Color(0xFFFFFFFF),
+        tertiary: Color(0xFF6366F1), // Indigo
+        onTertiary: Color(0xFFFFFFFF),
+        error: Color(0xFFEF4444),
+        onError: Color(0xFFFFFFFF),
+        background: Color(0xFF000000), // Pure black
+        onBackground: Color(0xFFE5E7EB),
+        surface: Color(0xFF111111), // Very dark gray
+        onSurface: Color(0xFFE5E7EB),
+        surfaceVariant: Color(0xFF1F1F1F),
+        onSurfaceVariant: Color(0xFFD1D5DB),
+        outline: Color(0xFF6B7280),
+        shadow: Color(0xFF000000),
+      ),
+      scaffoldBackgroundColor: const Color(0xFF000000),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF000000),
+        elevation: 0,
+        centerTitle: false,
+        iconTheme: IconThemeData(color: Color(0xFFE5E7EB)),
+        titleTextStyle: TextStyle(
+          color: Color(0xFFE5E7EB),
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: const Color(0xFF000000),
+        indicatorColor: const Color(0xFF1F1F1F),
+        labelTextStyle: MaterialStateProperty.all(
+          const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+      textTheme: GoogleFonts.poppinsTextTheme(
+        const TextTheme(
+          titleLarge: TextStyle(
+            color: Color(0xFFE5E7EB),
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+          titleMedium: TextStyle(
+            color: Color(0xFFE5E7EB),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          bodyLarge: TextStyle(
+            color: Color(0xFFD1D5DB),
+            fontSize: 16,
+          ),
+          bodyMedium: TextStyle(
+            color: Color(0xFF9CA3AF),
+            fontSize: 14,
+          ),
+        ),
+      ),
+      cardTheme: const CardThemeData(
+        color: Color(0xFF111111),
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF3B82F6),
+          foregroundColor: Colors.black,
+          elevation: 2,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // OLED Dark Theme - True black optimized for OLED displays
+  static ThemeData get oledDarkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF00FF88), // Neon green
+        onPrimary: Color(0xFF000000),
+        secondary: Color(0xFF00E5FF), // Cyan
+        onSecondary: Color(0xFF000000),
+        tertiary: Color(0xFFFF00FF), // Magenta
+        onTertiary: Color(0xFF000000),
+        error: Color(0xFFFF3030),
+        onError: Color(0xFF000000),
+        background: Color(0xFF000000), // Pure black for OLED
+        onBackground: Color(0xFFFFFFFF),
+        surface: Color(0xFF000000), // Pure black surface
+        onSurface: Color(0xFFFFFFFF),
+        surfaceVariant: Color(0xFF0A0A0A), // Slightly gray for differentiation
+        onSurfaceVariant: Color(0xFFE0E0E0),
+        outline: Color(0xFF808080),
+        shadow: Color(0xFF000000),
+      ),
+      scaffoldBackgroundColor: const Color(0xFF000000),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF000000),
+        elevation: 0,
+        centerTitle: false,
+        iconTheme: IconThemeData(color: Color(0xFFFFFFFF)),
+        titleTextStyle: TextStyle(
+          color: Color(0xFFFFFFFF),
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: const Color(0xFF000000),
+        indicatorColor: const Color(0xFF0A0A0A),
+        labelTextStyle: MaterialStateProperty.all(
+          const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFFFFFFFF),
+          ),
+        ),
+      ),
+      textTheme: GoogleFonts.robotoTextTheme(
+        const TextTheme(
+          titleLarge: TextStyle(
+            color: Color(0xFFFFFFFF),
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+          titleMedium: TextStyle(
+            color: Color(0xFFFFFFFF),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          bodyLarge: TextStyle(
+            color: Color(0xFFE0E0E0),
+            fontSize: 16,
+          ),
+          bodyMedium: TextStyle(
+            color: Color(0xFFC0C0C0),
+            fontSize: 14,
+          ),
+        ),
+      ),
+      cardTheme: const CardThemeData(
+        color: Color(0xFF0A0A0A),
+        elevation: 0, // No shadow on OLED
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          side: BorderSide(color: Color(0xFF303030), width: 1),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF00FF88),
+          foregroundColor: Colors.black,
+          elevation: 0, // No shadow for OLED
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
   // Get theme by mode
   static ThemeData getTheme(AppThemeMode mode) {
     switch (mode) {
@@ -431,6 +611,10 @@ class AppThemes {
         return whiteTheme;
       case AppThemeMode.pinkLight:
         return pinkLightTheme;
+      case AppThemeMode.midnightBlack:
+        return midnightBlackTheme;
+      case AppThemeMode.oledDark:
+        return oledDarkTheme;
     }
   }
 
@@ -445,6 +629,10 @@ class AppThemes {
         return 'White';
       case AppThemeMode.pinkLight:
         return 'Pink Light';
+      case AppThemeMode.midnightBlack:
+        return 'Midnight Black';
+      case AppThemeMode.oledDark:
+        return 'OLED Dark';
     }
   }
 
@@ -459,6 +647,10 @@ class AppThemes {
         return Icons.brightness_7;
       case AppThemeMode.pinkLight:
         return Icons.favorite;
+      case AppThemeMode.midnightBlack:
+        return Icons.nightlight;
+      case AppThemeMode.oledDark:
+        return Icons.brightness_2;
     }
   }
 } 

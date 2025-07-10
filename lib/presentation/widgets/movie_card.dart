@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mivi/data/models/movie_model.dart';
+import 'package:mivi/data/mock_data/mock_movies.dart';
+import 'package:mivi/core/utils/toast_utils.dart';
+import 'package:mivi/core/utils/haptic_utils.dart';
+import 'package:mivi/presentation/widgets/favorite_category_helper.dart';
 
 class MovieCard extends StatefulWidget {
   final Movie movie;
@@ -28,7 +32,9 @@ class _MovieCardState extends State<MovieCard>
   late Animation<double> _rotationAnimation;
   late Animation<double> _borderAnimation;
   bool _isPressed = false;
+  // ignore: unused_field
   bool _isHovered = false;
+
 
   @override
   void initState() {
@@ -67,6 +73,7 @@ class _MovieCardState extends State<MovieCard>
       _isHovered = true;
     });
     _hoverController.forward();
+    HapticUtils.movieTap();
   }
 
   void _onTapUp(TapUpDetails details) {
@@ -93,6 +100,47 @@ class _MovieCardState extends State<MovieCard>
     _hoverController.reverse();
   }
 
+  void _handleFavoriteToggle() {
+    // Add haptic feedback before the action
+    HapticUtils.favorite(isFavorite: !widget.movie.isFavorite);
+    
+    setState(() {
+      if (widget.movie.isFavorite) {
+        MockMovies.removeFromFavorites(widget.movie);
+        ToastUtils.showInfo(
+          context,
+          '${widget.movie.title} removed from favorites',
+          icon: Icons.favorite_border,
+        );
+      } else {
+        MockMovies.addToFavorites(widget.movie);
+        ToastUtils.showSuccess(
+          context,
+          '${widget.movie.title} added to favorites',
+          icon: Icons.favorite,
+        );
+      }
+    });
+    
+    // Also call the optional callback if provided
+    widget.onFavoriteToggle?.call();
+  }
+
+  Future<void> _showCategorySelector() async {
+    HapticUtils.longPress();
+    
+    await FavoriteCategoryHelper.showCategorySelector(
+      context,
+      movieId: widget.movie.id,
+      movieTitle: widget.movie.title,
+      onCategoryChanged: () {
+        // Refresh the widget if needed
+        setState(() {});
+        widget.onFavoriteToggle?.call();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -108,6 +156,7 @@ class _MovieCardState extends State<MovieCard>
               onTapDown: _onTapDown,
               onTapUp: _onTapUp,
               onTapCancel: _onTapCancel,
+              onLongPress: _showCategorySelector,
               child: Container(
                 width: 140,
                 margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
@@ -276,7 +325,7 @@ class _MovieCardState extends State<MovieCard>
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
-                                onTap: widget.onFavoriteToggle,
+                                onTap: () => _handleFavoriteToggle(),
                                 borderRadius: BorderRadius.circular(25),
                                 child: Container(
                                   padding: const EdgeInsets.all(10),

@@ -8,6 +8,9 @@ import 'package:mivi/data/services/gemini_ai_service.dart';
 import 'package:mivi/data/repositories/movie_repository.dart';
 import 'package:mivi/presentation/widgets/paginated_movie_cards.dart';
 import 'package:mivi/presentation/widgets/ai_model_selector.dart';
+import 'package:mivi/core/services/ai_chat_history_service.dart';
+import 'package:mivi/core/utils/haptic_utils.dart';
+import 'package:mivi/core/utils/toast_utils.dart';
 
 
 class AIChatScreen extends StatefulWidget {
@@ -25,6 +28,7 @@ class _AIChatScreenState extends State<AIChatScreen>
   
   late GeminiAIService _aiService;
   late AnimationController _fabAnimationController;
+  late AIChatHistoryService _historyService;
   
   final List<ChatMessage> _messages = [];
   ChatState _chatState = ChatState.idle;
@@ -34,13 +38,14 @@ class _AIChatScreenState extends State<AIChatScreen>
   void initState() {
     super.initState();
     _aiService = GeminiAIService(movieRepository: MovieRepository());
+    _historyService = AIChatHistoryService.instance;
     _fabAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
     
-    // Welcome message
-    _addWelcomeMessage();
+    // Initialize chat
+    _initializeChat();
     
     // Listen to focus changes for keyboard visibility
     _focusNode.addListener(() {
@@ -59,6 +64,25 @@ class _AIChatScreenState extends State<AIChatScreen>
     super.dispose();
   }
 
+  Future<void> _initializeChat() async {
+    // Load previous chat history
+    final history = _historyService.chatHistory;
+    if (history.isNotEmpty) {
+      setState(() {
+        _messages.addAll(history);
+      });
+      _scrollToBottom();
+    } else {
+      // Add welcome message for new chat
+      _addWelcomeMessage();
+    }
+    
+    // Start new session if none exists
+    if (_historyService.currentSessionId == null) {
+      await _historyService.startNewSession();
+    }
+  }
+
   void _addWelcomeMessage() {
     final welcomeMessage = ChatMessage(
       id: 'welcome',
@@ -70,6 +94,9 @@ class _AIChatScreenState extends State<AIChatScreen>
     setState(() {
       _messages.add(welcomeMessage);
     });
+    
+    // Save welcome message to history
+    _historyService.addMessage(welcomeMessage);
   }
 
   Future<void> _sendMessage(String text) async {
@@ -86,6 +113,9 @@ class _AIChatScreenState extends State<AIChatScreen>
       _messages.add(userMessage);
       _chatState = ChatState.processing;
     });
+
+    // Save user message to history
+    _historyService.addMessage(userMessage);
 
     _messageController.clear();
     _scrollToBottom();
@@ -111,6 +141,9 @@ class _AIChatScreenState extends State<AIChatScreen>
         _messages.add(aiMessage);
         _chatState = ChatState.idle;
       });
+
+      // Save AI message to history
+      _historyService.addMessage(aiMessage);
 
       _scrollToBottom();
     } catch (e) {
@@ -197,18 +230,20 @@ class _AIChatScreenState extends State<AIChatScreen>
           ],
         ),
         actions: [
+          // Chat history button
+          IconButton(
+            icon: Icon(Icons.history, color: colorScheme.onSurface),
+            onPressed: _showChatHistory,
+          ),
+          // Clear chat button
+          IconButton(
+            icon: Icon(Icons.clear_all, color: colorScheme.onSurface),
+            onPressed: _showClearChatDialog,
+          ),
+          // Model selector button
           IconButton(
             icon: Icon(Icons.settings, color: colorScheme.onSurface),
             onPressed: _showModelSelector,
-          ),
-          IconButton(
-            icon: Icon(Icons.refresh, color: colorScheme.onSurface),
-            onPressed: () {
-              setState(() {
-                _messages.clear();
-                _addWelcomeMessage();
-              });
-            },
           ),
         ],
       ),
@@ -542,6 +577,142 @@ class _AIChatScreenState extends State<AIChatScreen>
     return '${difference.inDays}d';
   }
 
+  void _showChatHistory() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Chat History',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showClearChatDialog();
+                    },
+                    child: Text('Clear All'),
+                  ),
+                ],
+              ),
+            ),
+            // Sessions list
+            Expanded(
+              child: _historyService.chatSessions.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 64,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No chat history yet',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _historyService.chatSessions.length,
+                      itemBuilder: (context, index) {
+                        final session = _historyService.chatSessions[index];
+                        return ListTile(
+                          leading: Icon(Icons.chat),
+                          title: Text(_historyService.getSessionSummary(session)),
+                          subtitle: Text(_historyService.getTimeAgo(session.lastActivity)),
+                          trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                                                     onTap: () async {
+                             HapticUtils.light();
+                             Navigator.pop(context);
+                             await _loadChatSession(session.sessionId);
+                           },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showClearChatDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Chat History'),
+        content: const Text('Are you sure you want to clear all chat history? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              HapticUtils.success();
+              await _clearChat();
+              Navigator.pop(context);
+              ToastUtils.showSuccess(context, 'Chat history cleared');
+            },
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _loadChatSession(String sessionId) async {
+    final messages = await _historyService.loadSession(sessionId);
+    setState(() {
+      _messages.clear();
+      _messages.addAll(messages);
+    });
+    _scrollToBottom();
+  }
+
+  Future<void> _clearChat() async {
+    await _historyService.clearAll();
+    setState(() {
+      _messages.clear();
+      _addWelcomeMessage();
+    });
+    await _historyService.startNewSession();
+  }
+
   void _showModelSelector() {
     showModalBottomSheet(
       context: context,
@@ -583,6 +754,9 @@ class _AIChatScreenState extends State<AIChatScreen>
                 setState(() {
                   _messages.add(modelChangeMessage);
                 });
+                
+                // Save model change message to history
+                _historyService.addMessage(modelChangeMessage);
                 
                 Navigator.pop(context);
               },

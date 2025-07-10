@@ -503,7 +503,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   title: 'Edit Profile',
                   subtitle: 'Update your personal information',
                   onTap: () {
-                    // TODO: Implement edit profile
+                    context.push('/edit-profile');
                   },
                 ),
                 _buildMenuItem(

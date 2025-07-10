@@ -6,6 +6,7 @@ import 'package:mivi/presentation/screens/movie_detail_screen.dart';
 import 'package:mivi/presentation/screens/search_screen.dart';
 import 'package:mivi/presentation/screens/favorites_screen.dart';
 import 'package:mivi/presentation/screens/profile_screen.dart';
+import 'package:mivi/presentation/screens/edit_profile_screen.dart';
 import 'package:mivi/presentation/screens/auth/login_screen.dart';
 import 'package:mivi/presentation/screens/auth/register_screen.dart';
 import 'package:mivi/data/mock_data/mock_movies.dart';
@@ -87,6 +88,10 @@ class AppRouter {
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: '/edit-profile',
+            builder: (context, state) => const EditProfileScreen(),
           ),
         ],
       ),

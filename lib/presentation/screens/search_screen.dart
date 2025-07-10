@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:mivi/data/models/movie_model.dart';
 import 'package:mivi/data/repositories/movie_repository.dart';
 import 'package:mivi/presentation/blocs/movie_bloc.dart';
-import 'package:shimmer/shimmer.dart';
+
+import 'package:mivi/presentation/widgets/skeleton_widgets.dart';
+import 'package:mivi/core/services/search_history_service.dart';
+import 'package:mivi/core/utils/haptic_utils.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -22,6 +25,8 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   late Animation<Offset> _slideAnimation;
   late MovieBloc _searchBloc;
   Timer? _debounceTimer;
+  List<String> _searchHistory = [];
+  List<String> _searchSuggestions = [];
 
   @override
   void initState() {
@@ -49,6 +54,9 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     // Initialize search BLoC
     _searchBloc = MovieBloc(movieRepository: MovieRepository());
     
+    // Initialize search history
+    _initializeSearchHistory();
+    
     _animationController.forward();
   }
 
@@ -56,16 +64,57 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     context.push('/movie/${movie.id}', extra: movie);
   }
 
+  Future<void> _initializeSearchHistory() async {
+    await SearchHistoryService.instance.initialize();
+    setState(() {
+      _searchHistory = SearchHistoryService.instance.searchHistory;
+    });
+  }
+
+  void _updateSearchSuggestions(String query) {
+    setState(() {
+      _searchSuggestions = SearchHistoryService.instance.getSuggestions(query);
+    });
+  }
+
+  Future<void> _addToSearchHistory(String query) async {
+    await SearchHistoryService.instance.addSearch(query);
+    setState(() {
+      _searchHistory = SearchHistoryService.instance.searchHistory;
+    });
+  }
+
+  Future<void> _removeFromSearchHistory(String query) async {
+    await SearchHistoryService.instance.removeSearch(query);
+    setState(() {
+      _searchHistory = SearchHistoryService.instance.searchHistory;
+      _searchSuggestions = SearchHistoryService.instance.getSuggestions(_query);
+    });
+  }
+
+  Future<void> _clearSearchHistory() async {
+    await SearchHistoryService.instance.clearAll();
+    setState(() {
+      _searchHistory = [];
+      _searchSuggestions = [];
+    });
+  }
+
   void _onSearchChanged(String value) {
     setState(() {
       _query = value;
     });
+
+    // Update search suggestions
+    _updateSearchSuggestions(value);
 
     // Debounce search to avoid too many API calls
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
       if (value.trim().isNotEmpty) {
         _searchBloc.add(SearchMovies(value.trim()));
+        // Add to search history when actually searching
+        _addToSearchHistory(value.trim());
       }
     });
   }
@@ -143,8 +192,10 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                         ],
                       ),
                       const SizedBox(height: 20),
-                      // Enhanced Search Field
-                      Container(
+                      // Enhanced Search Field with Suggestions
+                      Stack(
+                        children: [
+                          Container(
                         decoration: BoxDecoration(
                           color: colorScheme.surfaceVariant.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
@@ -183,6 +234,16 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                           ),
                           onChanged: _onSearchChanged,
                         ),
+                      ),
+                          // Search Suggestions Dropdown
+                          if (_query.isNotEmpty && _searchSuggestions.isNotEmpty)
+                            Positioned(
+                              top: 60,
+                              left: 0,
+                              right: 0,
+                              child: _buildSuggestionsDropdown(context),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -245,67 +306,285 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                 textAlign: TextAlign.center,
               ),
             const SizedBox(height: 40),
-            _buildPopularSearches(context),
+            _buildRecentSearches(context),
             ],
         ),
       ),
     );
   }
 
-  Widget _buildPopularSearches(BuildContext context) {
+  Widget _buildRecentSearches(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final popularSearches = [
-      'Marvel', 'DC Comics', 'Horror', 'Comedy', 'Action',
-      'Drama', 'Sci-Fi', 'Romance', 'Thriller', 'Animation'
-    ];
+    
+    // Show recent searches if available, otherwise show popular suggestions
+    final searchItems = _searchHistory.isNotEmpty 
+        ? _searchHistory
+        : [
+            'Marvel', 'DC Comics', 'Horror', 'Comedy', 'Action',
+            'Drama', 'Sci-Fi', 'Romance', 'Thriller', 'Animation'
+          ];
+    
+    final title = _searchHistory.isNotEmpty ? 'Recent Searches' : 'Popular Searches';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Popular Searches',
-          style: TextStyle(
-            color: colorScheme.onBackground,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: popularSearches.map((search) {
-            return GestureDetector(
-              onTap: () {
-                _controller.text = search;
-                _onSearchChanged(search);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceVariant.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: colorScheme.surfaceVariant.withOpacity(0.2),
-                  ),
-                ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: colorScheme.onBackground,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (_searchHistory.isNotEmpty)
+              TextButton(
+                onPressed: _clearSearchHistory,
                 child: Text(
-                  search,
+                  'Clear All',
                   style: TextStyle(
-                    color: colorScheme.onBackground,
+                    color: colorScheme.primary,
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-            );
-          }).toList(),
+          ],
         ),
+        const SizedBox(height: 16),
+        if (searchItems.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceVariant.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                'No recent searches',
+                style: TextStyle(
+                  color: colorScheme.onBackground.withOpacity(0.6),
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: searchItems.map((search) {
+              return GestureDetector(
+                onTap: () {
+                  HapticUtils.search();
+                  _controller.text = search;
+                  _onSearchChanged(search);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceVariant.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: colorScheme.surfaceVariant.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _searchHistory.contains(search) 
+                            ? Icons.history 
+                            : Icons.trending_up,
+                        size: 14,
+                        color: colorScheme.onBackground.withOpacity(0.6),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        search,
+                        style: TextStyle(
+                          color: colorScheme.onBackground,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (_searchHistory.contains(search)) ...[
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () {
+                            HapticUtils.light();
+                            _removeFromSearchHistory(search);
+                          },
+                          child: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: colorScheme.onBackground.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
       ],
     );
   }
 
+  Widget _buildSuggestionsDropdown(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: colorScheme.surfaceVariant.withOpacity(0.2),
+        ),
+      ),
+      child: ListView.builder(
+        padding: EdgeInsets.zero,
+        shrinkWrap: true,
+        itemCount: _searchSuggestions.length,
+        itemBuilder: (context, index) {
+          final suggestion = _searchSuggestions[index];
+          
+          return InkWell(
+            onTap: () {
+              HapticUtils.search();
+              _controller.text = suggestion;
+              _onSearchChanged(suggestion);
+              setState(() {
+                _searchSuggestions = [];
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                border: index < _searchSuggestions.length - 1
+                    ? Border(
+                        bottom: BorderSide(
+                          color: colorScheme.surfaceVariant.withOpacity(0.2),
+                        ),
+                      )
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.history,
+                    size: 16,
+                    color: colorScheme.onBackground.withOpacity(0.6),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        children: _buildHighlightedText(
+                          suggestion,
+                          _query,
+                          colorScheme,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.north_west,
+                    size: 16,
+                    color: colorScheme.onBackground.withOpacity(0.4),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  List<TextSpan> _buildHighlightedText(
+    String text,
+    String query,
+    ColorScheme colorScheme,
+  ) {
+    if (query.isEmpty) {
+      return [
+        TextSpan(
+          text: text,
+          style: TextStyle(
+            color: colorScheme.onBackground,
+            fontSize: 14,
+          ),
+        ),
+      ];
+    }
+
+    final lowercaseText = text.toLowerCase();
+    final lowercaseQuery = query.toLowerCase();
+    final spans = <TextSpan>[];
+    
+    int start = 0;
+    int index = lowercaseText.indexOf(lowercaseQuery);
+    
+    while (index != -1) {
+      // Add text before the match
+      if (index > start) {
+        spans.add(
+          TextSpan(
+            text: text.substring(start, index),
+            style: TextStyle(
+              color: colorScheme.onBackground,
+              fontSize: 14,
+            ),
+          ),
+        );
+      }
+      
+      // Add highlighted match
+      spans.add(
+        TextSpan(
+          text: text.substring(index, index + query.length),
+          style: TextStyle(
+            color: colorScheme.primary,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+      
+      start = index + query.length;
+      index = lowercaseText.indexOf(lowercaseQuery, start);
+    }
+    
+    // Add remaining text
+    if (start < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(start),
+          style: TextStyle(
+            color: colorScheme.onBackground,
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
+    
+    return spans;
+  }
+
   Widget _buildSearchResults(BuildContext context) {
+    // ignore: unused_local_variable
     final colorScheme = Theme.of(context).colorScheme;
     
     return BlocBuilder<MovieBloc, MovieState>(
@@ -343,29 +622,20 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
             ),
           ),
           const SizedBox(height: 20),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.65,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
+                      Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.65,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                ),
+                itemCount: 6,
+                itemBuilder: (context, index) {
+                  return SkeletonWidgets.movieCardSkeleton(context, width: 160, height: 240);
+                },
               ),
-              itemCount: 6,
-              itemBuilder: (context, index) {
-                return Shimmer.fromColors(
-                  baseColor: colorScheme.surfaceVariant,
-                  highlightColor: colorScheme.surface,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceVariant,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                );
-              },
             ),
-          ),
         ],
       ),
     );

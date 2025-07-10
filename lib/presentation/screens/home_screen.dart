@@ -9,7 +9,10 @@ import 'package:mivi/presentation/blocs/movie_bloc.dart';
 import 'package:mivi/presentation/widgets/horizontal_movie_scroller.dart';
 import 'package:mivi/presentation/widgets/genre_list.dart';
 import 'package:mivi/presentation/widgets/featured_movies_carousel.dart';
-import 'package:shimmer/shimmer.dart';
+
+import 'package:mivi/presentation/widgets/skeleton_widgets.dart';
+import 'package:mivi/core/utils/toast_utils.dart';
+import 'package:mivi/core/utils/haptic_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -101,6 +104,30 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     context.push('/search');
   }
 
+  Future<void> _handleRefresh() async {
+    // Add haptic feedback for refresh action
+    HapticUtils.refresh();
+    
+    // Refresh all movie data
+    _trendingBloc.add(const LoadTrendingMovies(checkForNotifications: true));
+    _popularBloc.add(const LoadPopularMovies());
+    _topRatedBloc.add(const LoadTopRatedMovies());
+    _nowPlayingBloc.add(const LoadNowPlayingMovies());
+    
+    // Add a small delay to show the refresh indicator
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    // Show success toast
+    if (mounted) {
+      ToastUtils.showSuccess(
+        context,
+        'Movies refreshed!',
+        icon: Icons.refresh,
+        duration: const Duration(seconds: 2),
+      );
+    }
+  }
+
   List<Movie> _filterMoviesByGenre(List<Movie> movies) {
     if (_selectedGenre == null) return movies;
     return movies.where((movie) => 
@@ -119,7 +146,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         child: SafeArea(
           child: !_genresLoaded 
             ? const Center(child: CircularProgressIndicator())
-            : CustomScrollView(
+            : RefreshIndicator(
+                onRefresh: _handleRefresh,
+                backgroundColor: colorScheme.surface,
+                color: colorScheme.primary,
+                child: CustomScrollView(
                 slivers: [
                   // Enhanced App Bar
                   SliverAppBar(
@@ -247,7 +278,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           BlocBuilder<MovieBloc, MovieState>(
                             bloc: _popularBloc,
                             builder: (context, state) {
-                              if (state is MovieLoaded && state.movies.isNotEmpty) {
+                              if (state is MovieLoading) {
+                                return SkeletonWidgets.featuredCarouselSkeleton(context);
+                              } else if (state is MovieLoaded && state.movies.isNotEmpty) {
                                 // Take top 5 movies for carousel
                                 final featuredMovies = state.movies.take(5).toList();
                                 return FeaturedMoviesCarousel(
@@ -331,36 +364,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ],
               ),
+                ),
         ),
       ),
     );
   }
 
   Widget _buildLoadingList() {
-    final colorScheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      height: 200,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return Container(
-            width: 140,
-            margin: const EdgeInsets.only(right: 16),
-            child: Shimmer.fromColors(
-              baseColor: colorScheme.surfaceVariant,
-              highlightColor: colorScheme.surface,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
+    return SkeletonWidgets.horizontalMovieListSkeleton(context, itemCount: 6);
   }
 
   Widget _buildEmptyState(String title) {

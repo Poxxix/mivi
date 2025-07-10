@@ -1,10 +1,12 @@
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mivi/app.dart';
 import 'package:mivi/presentation/providers/theme_provider.dart';
 import 'package:mivi/data/services/notification_service.dart';
 import 'package:mivi/data/services/guest_service.dart';
+import 'package:mivi/core/services/ai_chat_history_service.dart';
+import 'package:mivi/core/services/view_analytics_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // void main() {
@@ -26,6 +28,12 @@ Future<void> main() async {
   
   // Initialize notification service
   await NotificationService().initialize();
+  
+  // Initialize AI chat history service
+  await AIChatHistoryService.instance.initialize();
+  
+  // Initialize view analytics service
+  await ViewAnalyticsService.instance.initialize();
   
   runApp(
     ChangeNotifierProvider(

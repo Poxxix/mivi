@@ -7,6 +7,10 @@ import 'package:mivi/presentation/widgets/movie_detail_header.dart';
 import 'package:mivi/presentation/widgets/movie_info_section.dart';
 import 'package:mivi/presentation/widgets/horizontal_cast_scroller.dart';
 import 'package:mivi/presentation/widgets/horizontal_movie_scroller.dart';
+import 'package:mivi/presentation/widgets/movie_quotes_section.dart';
+import 'package:mivi/core/services/view_analytics_service.dart';
+import 'package:mivi/core/utils/toast_utils.dart';
+import 'package:mivi/core/utils/haptic_utils.dart';
 
 import 'VideoPlayerScreen.dart';
 import 'enhanced_trailer_player_screen.dart';
@@ -22,15 +26,38 @@ class MovieDetailScreen extends StatefulWidget {
 class _MovieDetailScreenState extends State<MovieDetailScreen> {
   late Movie _movie;
   final MovieRepository _movieRepository = MovieRepository();
+  final ViewAnalyticsService _analyticsService = ViewAnalyticsService.instance;
 
   bool _isLoading = true;
   String? _error;
+  String? _viewSessionId;
 
   @override
   void initState() {
     super.initState();
     _movie = widget.movie;
     _fetchMovieDetail();
+    _startViewSession();
+  }
+
+  @override
+  void dispose() {
+    _endViewSession();
+    super.dispose();
+  }
+
+  Future<void> _startViewSession() async {
+    _viewSessionId = await _analyticsService.startViewSession(
+      movieId: _movie.id,
+      movieTitle: _movie.title,
+      viewType: 'detail',
+    );
+  }
+
+  Future<void> _endViewSession() async {
+    if (_viewSessionId != null) {
+      await _analyticsService.endViewSession(_viewSessionId!);
+    }
   }
 
   Future<void> _fetchMovieDetail() async {
@@ -56,12 +83,25 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   }
 
   void _onFavoriteToggle() {
+    // Add haptic feedback
+    HapticUtils.favorite(isFavorite: !_movie.isFavorite);
+    
     setState(() {
       _movie = _movie.copyWith(isFavorite: !_movie.isFavorite);
       if (_movie.isFavorite) {
         MockMovies.addToFavorites(_movie);
+        ToastUtils.showSuccess(
+          context,
+          '${_movie.title} added to favorites',
+          icon: Icons.favorite,
+        );
       } else {
         MockMovies.removeFromFavorites(_movie);
+        ToastUtils.showInfo(
+          context,
+          '${_movie.title} removed from favorites',
+          icon: Icons.favorite_border,
+        );
       }
     });
   }
@@ -75,7 +115,19 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   }
 
   Future<void> _onPlayPressed() async {
+    // Add haptic feedback for primary action
+    HapticUtils.buttonPress(isPrimary: true);
+    
+    // Track full movie view
+    await _analyticsService.startViewSession(
+      movieId: _movie.id,
+      movieTitle: _movie.title,
+      viewType: 'full_movie',
+    );
+    
     // Kiểm tra ID phim và điều hướng tới VideoPlayerScreen nếu đúng
+    if (!mounted) return;
+    
     if (_movie.id == 749170) {
       const supabaseVideoUrl =
           'https://rxjhrphnwelxufmtnldh.supabase.co/storage/v1/object/public/movies/Inception%20-%20Planning%20scene%20(HQ).mp4';
@@ -87,7 +139,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       );
     }
     //how to train to dragon
-    if (_movie.id == 1087192) {
+    else if (_movie.id == 1087192) {
       const supabaseVideoUrl =
           'https://rxjhrphnwelxufmtnldh.supabase.co/storage/v1/object/public/movies//videoplayback.mp4';
       await Navigator.push(
@@ -98,7 +150,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       );
     }
     //the godfather
-    if (_movie.id == 238) {
+    else if (_movie.id == 238) {
       const supabaseVideoUrl =
           'https://rxjhrphnwelxufmtnldh.supabase.co/storage/v1/object/public/movies//videoplayback%20(1).mp4';
       await Navigator.push(
@@ -108,37 +160,51 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
         ),
       );
     } else {
-      _showErrorSnackBar('❌ Chưa có video cho phim này!');
+      if (mounted) {
+        _showErrorSnackBar('❌ Chưa có video cho phim này!');
+      }
     }
   }
 
   Future<void> _onWatchTrailerPressed() async {
+    // Add haptic feedback
+    HapticUtils.buttonPress();
+    
+    // Track trailer view
+    await _analyticsService.startViewSession(
+      movieId: _movie.id,
+      movieTitle: _movie.title,
+      viewType: 'trailer',
+    );
+    
     try {
       // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Center(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.black87,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(color: Colors.red),
-                const SizedBox(height: 16),
-                Text(
-                  'Đang tìm trailer...',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ],
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => Center(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.black87,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: Colors.red),
+                  SizedBox(height: 16),
+                  Text(
+                    'Đang tìm trailer...',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      );
+        );
+      }
 
       // Get trailer YouTube key
       final youtubeKey = await _movieRepository.getTrailerYoutubeKey(_movie.id);
@@ -232,6 +298,12 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(child: MovieInfoSection(movie: _movie)),
+                SliverToBoxAdapter(
+                  child: MovieQuotesSection(
+                    movieId: _movie.id,
+                    movieTitle: _movie.title,
+                  ),
+                ),
                 if (_movie.cast.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
