@@ -19,6 +19,7 @@ class MiviApp extends StatelessWidget {
             theme: themeProvider.themeData,
             themeMode: ThemeMode.light, // Always use light mode since we handle themes internally
             routerConfig: AppRouter.router,
+            debugShowCheckedModeBanner: false,
           );
         },
       ),

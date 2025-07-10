@@ -2,12 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mivi/data/mock_data/mock_movies.dart';
 import 'package:mivi/data/models/movie_model.dart';
 import 'package:mivi/data/repositories/movie_repository.dart';
 import 'package:mivi/presentation/blocs/movie_bloc.dart';
-import 'package:mivi/presentation/widgets/search_bar.dart' as custom;
-import 'package:mivi/presentation/widgets/movie_list.dart';
 import 'package:shimmer/shimmer.dart';
 
 class SearchScreen extends StatefulWidget {

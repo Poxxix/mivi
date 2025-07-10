@@ -19,6 +19,5 @@ Future<void> main() async {
   
   // Initialize guest service
   await GuestService().initialize();
-  
   runApp(const MiviApp());
 }

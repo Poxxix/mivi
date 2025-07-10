@@ -93,11 +93,11 @@ class _MovieCardState extends State<MovieCard>
               onTapUp: _onTapUp,
               onTapCancel: _onTapCancel,
       child: Container(
-                width: 150, // Tăng width từ 140 lên 150
+                width: 140,
                 margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
         decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20), // Tăng border radius
+                  borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
                       color: colorScheme.primary.withOpacity(0.1),
@@ -119,16 +119,16 @@ class _MovieCardState extends State<MovieCard>
             Stack(
               children: [
                 ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                           child: Hero(
                             tag: 'movie_${widget.movie.id}',
                             child: CachedNetworkImage(
                               imageUrl: widget.movie.posterPath,
-                              height: 220, // Tăng height từ 200 lên 220
+                              height: 200,
                     width: double.infinity,
                     fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
-                                height: 220,
+                                height: 200,
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     begin: Alignment.topLeft,
@@ -161,7 +161,7 @@ class _MovieCardState extends State<MovieCard>
                                 ),
                               ),
                               errorWidget: (context, url, error) => Container(
-                                height: 220,
+                                height: 200,
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     begin: Alignment.topLeft,
@@ -192,8 +192,8 @@ class _MovieCardState extends State<MovieCard>
                                   ],
                   ),
                 ),
-                              memCacheWidth: 150,
-                              memCacheHeight: 220,
+                              memCacheWidth: 140,
+                              memCacheHeight: 200,
                             ),
                           ),
                         ),
@@ -339,7 +339,7 @@ class _MovieCardState extends State<MovieCard>
                             child: Container(
                               decoration: BoxDecoration(
                                 color: colorScheme.primary.withOpacity(0.1),
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                     ),
                   ),
                 ),
@@ -347,85 +347,83 @@ class _MovieCardState extends State<MovieCard>
             ),
                     
                     // Movie info section với thiết kế cải thiện
-            Expanded(
-              child: Padding(
-                        padding: const EdgeInsets.all(12.0), // Tăng padding
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                            // Title với typography cải thiện
-                    Flexible(
-                      child: Text(
-                                widget.movie.title,
-                                style: TextStyle(
-                                  fontSize: 14, // Tăng từ 13 lên 14
-                                  fontWeight: FontWeight.w700, // Tăng font weight
-                                  color: colorScheme.onSurface,
-                                  height: 1.3,
-                                  letterSpacing: 0.1,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                            const SizedBox(height: 8), // Tăng spacing
-                            
-                            // Release year và genre với thiết kế đẹp hơn
-                            Row(
-                              children: [
-                                // Release year
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.surfaceVariant.withOpacity(0.7),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    widget.movie.releaseYear,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                // Genre
-                                if (widget.movie.genres.isNotEmpty)
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            colorScheme.primary.withOpacity(0.15),
-                                            colorScheme.primary.withOpacity(0.1),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: colorScheme.primary.withOpacity(0.2),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        widget.movie.genres.first.name,
+            Container(
+              height: 80, // Fixed height để tránh overflow
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title với typography cải thiện
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      widget.movie.title,
                       style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                          color: colorScheme.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                        height: 1.2,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ),
-                              ],
                     ),
-                  ],
-                ),
+                  ),
+                  
+                  const SizedBox(height: 6),
+                  
+                  // Release year và genre với thiết kế đẹp hơn
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      children: [
+                        // Release year
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceVariant.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            widget.movie.releaseYear,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        // Genre
+                        if (widget.movie.genres.isNotEmpty)
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: colorScheme.primary.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                widget.movie.genres.first.name,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.primary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

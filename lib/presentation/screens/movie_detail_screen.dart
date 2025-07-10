@@ -5,11 +5,9 @@ import 'package:mivi/data/mock_data/mock_movies.dart';
 import 'package:mivi/data/repositories/movie_repository.dart';
 import 'package:mivi/presentation/widgets/movie_detail_header.dart';
 import 'package:mivi/presentation/widgets/movie_info_section.dart';
-import 'package:mivi/presentation/widgets/cast_list.dart';
-import 'package:mivi/presentation/widgets/movie_list.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
+import 'package:mivi/presentation/widgets/horizontal_cast_scroller.dart';
+import 'package:mivi/presentation/widgets/horizontal_movie_scroller.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'enhanced_trailer_player_screen.dart';
 import 'VideoPlayerScreen.dart';
 
 class MovieDetailScreen extends StatefulWidget {
@@ -258,18 +256,25 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 SliverToBoxAdapter(child: MovieInfoSection(movie: _movie)),
                 if (_movie.cast.isNotEmpty)
                   SliverToBoxAdapter(
-                    child: CastList(
-                      title: 'Cast',
-                      cast: _movie.cast,
-                      onCastMemberTap: _onCastMemberTap,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: HorizontalCastScroller(
+                        castMembers: _movie.cast,
+                        title: 'Cast',
+                        showNavigationButtons: true,
+                      ),
                     ),
                   ),
                 if (_movie.similarMovies.isNotEmpty)
                   SliverToBoxAdapter(
-                    child: MovieList(
-                      title: 'Similar Movies',
-                      movies: _movie.similarMovies,
-                      onMovieTap: _onSimilarMovieTap,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: HorizontalMovieScroller(
+                        movies: _movie.similarMovies,
+                        title: 'Similar Movies',
+                        showNavigationButtons: true,
+                        isCompact: false,
+                      ),
                     ),
                   ),
               ],

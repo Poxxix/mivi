@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mivi/data/models/movie_model.dart';
-import 'package:mivi/presentation/core/app_colors.dart';
+
 import 'package:mivi/presentation/widgets/movie_card.dart';
 
 class MovieList extends StatefulWidget {

@@ -5,7 +5,8 @@ import 'package:mivi/data/mock_data/mock_movies.dart';
 import 'package:mivi/data/models/movie_model.dart';
 import 'package:mivi/data/repositories/movie_repository.dart';
 import 'package:mivi/presentation/blocs/movie_bloc.dart';
-import 'package:mivi/presentation/widgets/movie_list.dart';
+
+import 'package:mivi/presentation/widgets/horizontal_movie_scroller.dart';
 import 'package:mivi/presentation/widgets/genre_list.dart';
 import 'package:mivi/presentation/widgets/featured_movies_carousel.dart';
 import 'package:shimmer/shimmer.dart';
@@ -491,10 +492,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               if (filteredMovies.isEmpty) {
                 return _buildEmptyState(title);
               }
-              return MovieList(
-                title: '',
+              return HorizontalMovieScroller(
                 movies: filteredMovies,
-                onMovieTap: _onMovieTap,
+                title: '',
+                showNavigationButtons: true,
+                isCompact: false,
               );
             } else if (state is MovieError) {
               return _buildErrorState(title, state.message, () {

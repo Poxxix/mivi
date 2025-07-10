@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:mivi/presentation/screens/home_screen.dart';
 import 'package:mivi/presentation/screens/movie_detail_screen.dart';
@@ -10,6 +11,8 @@ import 'package:mivi/presentation/screens/auth/register_screen.dart';
 import 'package:mivi/data/mock_data/mock_movies.dart';
 import 'package:mivi/data/models/movie_model.dart';
 import 'package:mivi/data/services/guest_service.dart';
+import 'package:mivi/presentation/screens/ai_chat_screen.dart';
+import 'package:mivi/presentation/widgets/floating_ai_chat.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppRouter {
@@ -98,6 +101,11 @@ class AppRouter {
           return MovieDetailScreen(movie: movie);
         },
       ),
+      // AI Chat route
+      GoRoute(
+        path: '/ai-chat',
+        builder: (context, state) => const AIChatScreen(),
+      ),
     ],
   );
 }
@@ -166,7 +174,10 @@ class ScaffoldWithBottomNav extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     
     return Scaffold(
-      body: child,
+      body: FloatingAIChatProvider(
+        child: child,
+        showFloatingChat: true,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,

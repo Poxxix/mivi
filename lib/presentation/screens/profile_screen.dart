@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:mivi/presentation/providers/enhanced_theme_provider.dart';
+
 import 'package:mivi/presentation/widgets/theme_selector_widget.dart';
 import 'package:mivi/data/services/guest_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
