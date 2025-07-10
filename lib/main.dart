@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:mivi/app.dart';
+import 'package:mivi/presentation/providers/theme_provider.dart';
+import 'package:mivi/data/services/notification_service.dart';
 import 'package:mivi/data/services/guest_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -20,5 +23,14 @@ Future<void> main() async {
   
   // Initialize guest service
   await GuestService().initialize();
-  runApp(const MiviApp());
+  
+  // Initialize notification service
+  await NotificationService().initialize();
+  
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MiviApp(),
+    ),
+  );
 }

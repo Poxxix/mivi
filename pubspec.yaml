@@ -36,6 +36,12 @@ dependencies:
   bubble: ^1.2.1
   # Wit.ai (uses http for API calls)
   # No specific package needed, we'll use http directly
+  # Notifications
+  flutter_local_notifications: ^17.2.3
+  # Web push notifications (Firebase alternative)
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.4
+
 
 dev_dependencies:
   flutter_test:

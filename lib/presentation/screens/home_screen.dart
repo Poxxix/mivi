@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _nowPlayingBloc = MovieBloc(movieRepository: movieRepository);
     _genreBloc = MovieBloc(movieRepository: movieRepository);
     // Load initial data
-    _trendingBloc.add(const LoadTrendingMovies());
+    _trendingBloc.add(const LoadTrendingMovies(checkForNotifications: true));
     _popularBloc.add(const LoadPopularMovies());
     _topRatedBloc.add(const LoadTopRatedMovies());
     _nowPlayingBloc.add(const LoadNowPlayingMovies());

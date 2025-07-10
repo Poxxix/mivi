@@ -226,38 +226,54 @@ class _CastCard extends StatelessWidget {
           
           const SizedBox(height: 8),
           
-          // Actor Info
+          // Actor Info - Fixed overflow issue
           Expanded(
             flex: 2,
-            child: Column(
-              children: [
-                // Actor Name
-                Text(
-                  castMember.name,
-                  style: TextStyle(
-                    color: colorScheme.onSurface,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Column(
+                children: [
+                  // Actor Name - Fixed height allocation
+                  Expanded(
+                    flex: 3,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Text(
+                        castMember.name,
+                        style: TextStyle(
+                          color: colorScheme.onSurface,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 2),
-                
-                // Character Name
-                Text(
-                  castMember.character,
-                  style: TextStyle(
-                    color: colorScheme.onSurface.withOpacity(0.7),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w400,
+                  
+                  const SizedBox(height: 4),
+                  
+                  // Character Name - Fixed height allocation
+                  Expanded(
+                    flex: 2,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Text(
+                        castMember.character,
+                        style: TextStyle(
+                          color: colorScheme.onSurface.withOpacity(0.7),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

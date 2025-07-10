@@ -2,13 +2,17 @@ import 'package:mivi/core/constants/api_constants.dart';
 import 'package:mivi/data/models/api_models.dart';
 import 'package:mivi/data/models/movie_model.dart';
 import 'package:mivi/data/services/api_service.dart';
+import 'package:mivi/data/services/notification_service.dart';
 import 'package:collection/collection.dart';
 
 class MovieRepository {
   final ApiService _apiService;
+  final NotificationService _notificationService;
   List<Genre> _allGenres = [];
 
-  MovieRepository({ApiService? apiService}) : _apiService = apiService ?? ApiService();
+  MovieRepository({ApiService? apiService, NotificationService? notificationService}) 
+    : _apiService = apiService ?? ApiService(),
+      _notificationService = notificationService ?? NotificationService();
 
   List<Genre> get allGenres => _allGenres;
 
@@ -79,11 +83,26 @@ class MovieRepository {
   }
 
   // Get trending movies
-  Future<List<Movie>> getTrendingMovies({int page = 1}) async {
+  Future<List<Movie>> getTrendingMovies({int page = 1, bool checkForNotifications = false}) async {
     try {
       final response = await _apiService.getTrendingMovies(page: page);
       print('Trending movies response: \\${response.results}');
-      return response.results?.map((dto) => _convertMovieDtoToMovie(dto)).toList() ?? [];
+      final movies = response.results?.map((dto) => _convertMovieDtoToMovie(dto)).toList() ?? [];
+      
+      // Check for new trending movies and send notifications (only for first page)
+      if (checkForNotifications && page == 1 && movies.isNotEmpty) {
+        try {
+          final notificationsEnabled = await _notificationService.areNotificationsEnabled();
+          if (notificationsEnabled) {
+            await _notificationService.checkAndNotifyNewMovies(movies);
+          }
+        } catch (e) {
+          print('Error checking notifications: $e');
+          // Don't throw error for notification failures
+        }
+      }
+      
+      return movies;
     } catch (e) {
       print('Error fetching trending movies: \\${e}');
       throw Exception('Failed to fetch trending movies: $e');

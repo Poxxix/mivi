@@ -6,7 +6,7 @@ import 'package:mivi/data/models/chat_models.dart';
 import 'package:mivi/data/models/movie_model.dart';
 import 'package:mivi/data/services/gemini_ai_service.dart';
 import 'package:mivi/data/repositories/movie_repository.dart';
-import 'package:mivi/presentation/widgets/horizontal_movie_scroller.dart';
+import 'package:mivi/presentation/widgets/paginated_movie_cards.dart';
 import 'package:mivi/presentation/widgets/ai_model_selector.dart';
 
 
@@ -312,11 +312,10 @@ class _AIChatScreenState extends State<AIChatScreen>
   Widget _buildMovieRecommendations(List<Movie> movies, ColorScheme colorScheme) {
     return Container(
       margin: const EdgeInsets.only(top: 12),
-      child: HorizontalMovieScroller(
+      child: PaginatedMovieCards(
         movies: movies,
         title: "Recommended Movies",
-        isCompact: true,
-        showNavigationButtons: true,
+        cardsPerPage: 3,
       ),
     );
   }

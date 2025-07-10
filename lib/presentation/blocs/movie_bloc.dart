@@ -13,11 +13,12 @@ abstract class MovieEvent extends Equatable {
 
 class LoadTrendingMovies extends MovieEvent {
   final int page;
+  final bool checkForNotifications;
 
-  const LoadTrendingMovies({this.page = 1});
+  const LoadTrendingMovies({this.page = 1, this.checkForNotifications = false});
 
   @override
-  List<Object?> get props => [page];
+  List<Object?> get props => [page, checkForNotifications];
 }
 
 class LoadPopularMovies extends MovieEvent {
@@ -168,7 +169,10 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
   ) async {
     emit(MovieLoading());
     try {
-      final movies = await _movieRepository.getTrendingMovies(page: event.page);
+      final movies = await _movieRepository.getTrendingMovies(
+        page: event.page, 
+        checkForNotifications: event.checkForNotifications,
+      );
       emit(MovieLoaded(movies));
     } catch (e) {
       emit(MovieError(e.toString()));
