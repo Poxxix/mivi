@@ -5,6 +5,16 @@ import 'package:mivi/data/models/chat_models.dart';
 import 'package:mivi/data/models/movie_model.dart';
 import 'package:mivi/data/repositories/movie_repository.dart';
 
+enum GeminiModel {
+  flash('gemini-1.5-flash', 'Fast & Efficient'),
+  pro('gemini-1.5-pro', 'Smart & Detailed'),
+  experimental('gemini-2.0-flash-exp', 'Latest Features');
+
+  const GeminiModel(this.modelId, this.description);
+  final String modelId;
+  final String description;
+}
+
 class GeminiAIService {
   final MovieRepository movieRepository;
   final Random _random = Random();
@@ -12,45 +22,77 @@ class GeminiAIService {
   // TODO: Get your FREE Gemini API key from https://makersuite.google.com/app/apikey
   static const String _apiKey = 'AIzaSyDbS539Ijab-f1-02if85Ov34A4ysCfXfs';
   
+  // Current model configuration
+  static GeminiModel currentModel = GeminiModel.pro; // Default to Pro
+  
   late final GenerativeModel _model;
 
   GeminiAIService({required this.movieRepository}) {
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash', // Latest model, completely FREE
+      model: currentModel.modelId, // Use selected model
       apiKey: _apiKey,
+      generationConfig: GenerationConfig(
+        temperature: 0.7, // Balanced creativity vs accuracy
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      ),
+      safetySettings: [
+        SafetySetting(HarmCategory.harassment, HarmBlockThreshold.medium),
+        SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.medium),
+        SafetySetting(HarmCategory.sexuallyExplicit, HarmBlockThreshold.medium),
+        SafetySetting(HarmCategory.dangerousContent, HarmBlockThreshold.medium),
+      ],
     );
   }
 
-  // System prompt for the AI
+  // Method to switch models dynamically
+  static void switchModel(GeminiModel newModel) {
+    currentModel = newModel;
+    print('🔄 Switched to ${newModel.modelId} (${newModel.description})');
+  }
+
+  // Get current model info
+  static String getCurrentModelInfo() {
+    return '${currentModel.modelId} - ${currentModel.description}';
+  }
+
+  // Enhanced system prompt for Gemini Pro
   static const String _systemPrompt = '''
-You are an intelligent movie recommendation AI assistant for a Flutter movie app called Mivi.
+You are MIVI's intelligent movie recommendation assistant. You help users discover great movies through natural conversation.
 
-RULES:
-1. Only respond to movie-related queries
-2. Be concise and helpful 
-3. Use emojis sparingly
-4. Always end with helpful suggestions
+CORE CAPABILITIES:
+• Movie recommendations (trending, popular, by genre, by actor)
+• Movie information and details
+• Personalized suggestions based on preferences
+• Answer questions about films, actors, and cinema
 
-CAPABILITIES:
-- Recommend movies by genre, mood, actor
-- Search for specific movies  
-- Show trending, popular, top-rated movies
-- Provide movie information
-- Handle greetings and basic conversation
+RESPONSE GUIDELINES:
+• Be conversational, friendly, and enthusiastic about movies
+• When users ask for recommendations, provide helpful context about the movies
+• Use emojis to make responses more engaging
+• Keep responses concise but informative
+• Always be encouraging and help users discover new films
 
-RESPONSE TYPES:
-For movie recommendations: Respond with "RECOMMEND:{genre|popular|trending|top_rated|actor:name}"
-For movie search: Respond with "SEARCH:{movie_name_or_actor}"
-For greetings: Respond with friendly greeting + offer help
-For help: Explain your capabilities
-For non-movie topics: Politely redirect to movie topics
+MOVIE CATEGORIES YOU CAN RECOMMEND:
+• Trending movies (current popular films)
+• Popular movies (all-time favorites)
+• Top rated movies (critically acclaimed)
+• By genre: Action, Comedy, Horror, Drama, Romance, Thriller, Sci-Fi, Fantasy, Animation, Adventure
+• By specific actors or directors
+• Surprise recommendations
 
-EXAMPLES:
-User: "recommend action movies" → RECOMMEND:action
-User: "show trending" → RECOMMEND:trending  
-User: "find Tom Hanks movies" → SEARCH:Tom Hanks
-User: "hello" → Friendly greeting + offer help
-User: "weather today" → "I'm a movie assistant, let me help you find great films instead!"
+EXAMPLE INTERACTIONS:
+User: "I want action movies"
+You: "🎬 Perfect! Action movies are my favorite to recommend. Here are some amazing action-packed films that will keep you on the edge of your seat!"
+
+User: "Show me something funny"
+You: "😂 Comedy time! I've got some hilarious movies that will definitely make you laugh out loud. These are crowd favorites!"
+
+User: "What's trending?"
+You: "🔥 Here's what everyone's talking about right now! These trending movies are absolutely worth watching."
+
+Remember: When recommending movies, be enthusiastic and provide context. The app will automatically show movie cards with your recommendations.
 ''';
 
   // Quick actions for convenience
@@ -105,15 +147,89 @@ User: "weather today" → "I'm a movie assistant, let me help you find great fil
   // Parse Gemini response and execute appropriate actions
   Future<AIResponse> _parseGeminiResponse(String aiText, String originalInput) async {
     final text = aiText.toLowerCase();
+    final input = originalInput.toLowerCase();
 
     // Handle specific commands from Gemini
     if (text.contains('recommend:')) {
       return await _handleRecommendCommand(aiText);
     } else if (text.contains('search:')) {
       return await _handleSearchCommand(aiText);
+    } 
+    // Smart detection of recommendation requests
+    else if (_shouldShowMovieRecommendations(input, text)) {
+      return await _handleSmartRecommendation(input, aiText);
     } else {
       // Direct text response with smart suggestions
       return _handleDirectResponse(aiText, originalInput);
+    }
+  }
+
+  // Smart detection for when to show movie recommendations
+  bool _shouldShowMovieRecommendations(String userInput, String aiResponse) {
+    final recommendKeywords = [
+      'recommend', 'suggest', 'show me', 'find', 'watch',
+      'movies', 'films', 'trending', 'popular', 'top rated',
+      'action', 'comedy', 'horror', 'drama', 'romance', 'thriller',
+      'sci-fi', 'fantasy', 'adventure', 'animation',
+      'actor', 'director', 'genre', 'surprise me'
+    ];
+    
+    final responseKeywords = [
+      'here are', 'i recommend', 'you should watch', 'check out',
+      'great movies', 'perfect for you', 'trending', 'popular'
+    ];
+    
+    bool inputMatches = recommendKeywords.any((keyword) => userInput.contains(keyword));
+    bool responseMatches = responseKeywords.any((keyword) => aiResponse.contains(keyword));
+    
+    return inputMatches || responseMatches;
+  }
+
+  // Handle smart recommendations based on natural language
+  Future<AIResponse> _handleSmartRecommendation(String userInput, String aiText) async {
+    try {
+      List<Movie> movies = [];
+      String response = aiText;
+
+      // Determine what type of recommendation to make
+      if (userInput.contains('trending') || userInput.contains('popular now')) {
+        movies = await movieRepository.getTrendingMovies();
+      } else if (userInput.contains('popular')) {
+        movies = await movieRepository.getPopularMovies();
+      } else if (userInput.contains('top rated') || userInput.contains('best')) {
+        movies = await movieRepository.getTopRatedMovies();
+      } else if (userInput.contains('action')) {
+        movies = await movieRepository.getMoviesByGenre(28); // Action
+      } else if (userInput.contains('comedy') || userInput.contains('funny')) {
+        movies = await movieRepository.getMoviesByGenre(35); // Comedy
+      } else if (userInput.contains('horror') || userInput.contains('scary')) {
+        movies = await movieRepository.getMoviesByGenre(27); // Horror
+      } else if (userInput.contains('romance') || userInput.contains('love')) {
+        movies = await movieRepository.getMoviesByGenre(10749); // Romance
+      } else if (userInput.contains('drama')) {
+        movies = await movieRepository.getMoviesByGenre(18); // Drama
+      } else if (userInput.contains('thriller')) {
+        movies = await movieRepository.getMoviesByGenre(53); // Thriller
+      } else if (userInput.contains('sci-fi') || userInput.contains('science fiction')) {
+        movies = await movieRepository.getMoviesByGenre(878); // Sci-Fi
+      } else if (userInput.contains('fantasy')) {
+        movies = await movieRepository.getMoviesByGenre(14); // Fantasy
+      } else if (userInput.contains('animation') || userInput.contains('animated')) {
+        movies = await movieRepository.getMoviesByGenre(16); // Animation
+      } else if (userInput.contains('adventure')) {
+        movies = await movieRepository.getMoviesByGenre(12); // Adventure
+      } else {
+        // Default to trending for general requests
+        movies = await movieRepository.getTrendingMovies();
+      }
+
+      return AIResponse(
+        content: response,
+        movieRecommendations: movies.take(6).toList(),
+        suggestedActions: quickActions.take(3).toList(),
+      );
+    } catch (e) {
+      return _handleAPIError();
     }
   }
 

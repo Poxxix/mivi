@@ -7,8 +7,9 @@ import 'package:mivi/presentation/widgets/movie_detail_header.dart';
 import 'package:mivi/presentation/widgets/movie_info_section.dart';
 import 'package:mivi/presentation/widgets/horizontal_cast_scroller.dart';
 import 'package:mivi/presentation/widgets/horizontal_movie_scroller.dart';
-import 'package:url_launcher/url_launcher.dart';
+
 import 'VideoPlayerScreen.dart';
+import 'enhanced_trailer_player_screen.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final Movie movie;
@@ -148,38 +149,15 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       }
 
       if (youtubeKey != null && mounted) {
-        // Show success message briefly
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green),
-                const SizedBox(width: 8),
-                Text('Đã tìm thấy trailer! Đang mở YouTube...'),
-              ],
+        // Navigate to enhanced trailer player screen
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EnhancedTrailerPlayerScreen(
+              youtubeKey: youtubeKey,
             ),
-            backgroundColor: Colors.green[700],
-            duration: Duration(milliseconds: 1500),
-            behavior: SnackBarBehavior.floating,
           ),
         );
-
-        // Wait a bit for snackbar then open YouTube
-        await Future.delayed(Duration(milliseconds: 500));
-
-        if (mounted) {
-          // Mở trực tiếp YouTube
-          final url = Uri.parse('https://www.youtube.com/watch?v=$youtubeKey');
-          try {
-            if (await canLaunchUrl(url)) {
-              await launchUrl(url, mode: LaunchMode.externalApplication);
-            } else {
-              _showErrorSnackBar('❌ Không thể mở YouTube');
-            }
-          } catch (e) {
-            _showErrorSnackBar('❌ Lỗi mở YouTube: ${e.toString()}');
-          }
-        }
       } else if (mounted) {
         _showErrorSnackBar('❌ Không tìm thấy trailer cho phim này');
       }

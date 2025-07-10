@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:bubble/bubble.dart';
-import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+
 import 'package:mivi/data/models/chat_models.dart';
 import 'package:mivi/data/models/movie_model.dart';
 import 'package:mivi/data/services/gemini_ai_service.dart';
 import 'package:mivi/data/repositories/movie_repository.dart';
 import 'package:mivi/presentation/widgets/horizontal_movie_scroller.dart';
+import 'package:mivi/presentation/widgets/ai_model_selector.dart';
 
 
 class AIChatScreen extends StatefulWidget {
@@ -62,7 +62,7 @@ class _AIChatScreenState extends State<AIChatScreen>
   void _addWelcomeMessage() {
     final welcomeMessage = ChatMessage(
       id: 'welcome',
-      content: "Hi! I'm your AI movie assistant 🤖\n\nI can help you discover amazing movies, get personalized recommendations, and answer questions about films. Try the quick actions below or just ask me anything!",
+      content: "Hi! I'm your AI movie assistant 🤖\n\nPowered by ${GeminiAIService.getCurrentModelInfo()}\n\nI can help you discover amazing movies, get personalized recommendations, and answer questions about films. Try the quick actions below or just ask me anything!",
       type: MessageType.ai,
       timestamp: DateTime.now(),
     );
@@ -197,6 +197,10 @@ class _AIChatScreenState extends State<AIChatScreen>
           ],
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.settings, color: colorScheme.onSurface),
+            onPressed: _showModelSelector,
+          ),
           IconButton(
             icon: Icon(Icons.refresh, color: colorScheme.onSurface),
             onPressed: () {
@@ -537,6 +541,57 @@ class _AIChatScreenState extends State<AIChatScreen>
     if (difference.inHours < 1) return '${difference.inMinutes}m';
     if (difference.inDays < 1) return '${difference.inHours}h';
     return '${difference.inDays}d';
+  }
+
+  void _showModelSelector() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        margin: const EdgeInsets.only(top: 50),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Model selector
+            AIModelSelector(
+              onModelChanged: (newModel) {
+                // Recreate AI service with new model
+                _aiService = GeminiAIService(movieRepository: MovieRepository());
+                
+                // Add notification message
+                final modelChangeMessage = ChatMessage(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  content: "🔄 Switched to ${newModel.modelId} (${newModel.description}). The conversation will continue with enhanced capabilities!",
+                  type: MessageType.ai,
+                  timestamp: DateTime.now(),
+                );
+                
+                setState(() {
+                  _messages.add(modelChangeMessage);
+                });
+                
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

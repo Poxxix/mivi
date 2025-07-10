@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mivi/app.dart';
 import 'package:mivi/data/services/guest_service.dart';
@@ -9,7 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Supabase
   await Supabase.initialize(
     url: 'https://wwmxswvrdjrblafzddti.supabase.co',
