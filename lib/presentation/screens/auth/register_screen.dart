@@ -40,8 +40,6 @@ class _RegisterScreenState extends State<RegisterScreen>
     _animationController.forward();
   }
 
-  final _supabase = Supabase.instance.client;
-
   @override
   void dispose() {
     _usernameController.dispose();

@@ -26,7 +26,7 @@ class MovieDetailHeader extends StatelessWidget {
           height: 300,
           width: double.infinity,
           child: Image.network(
-            movie.backdropPath ?? 'https://via.placeholder.com/1200x300',
+            movie.backdropPath.isNotEmpty ? movie.backdropPath : 'https://via.placeholder.com/1200x300',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
               return Container(

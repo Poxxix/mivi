@@ -45,6 +45,10 @@ dependencies:
   # Voice search
   speech_to_text: ^6.6.0
   permission_handler: ^11.3.0
+  # Text to Speech
+  flutter_tts: ^4.0.2
+  # Audio Player
+  audioplayers: ^6.0.0
 
 
 dev_dependencies:

@@ -166,7 +166,12 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
       if (value.trim().isNotEmpty) {
-        _searchBloc.add(SearchMovies(value.trim()));
+        _searchBloc.add(SearchMovies(
+          value.trim(),
+          genre: _selectedGenre,
+          year: _selectedYear,
+          minRating: _minRating > 0 ? _minRating : null,
+        ));
         // Add to search history when actually searching
         _addToSearchHistory(value.trim());
       }

@@ -78,11 +78,20 @@ class LoadMovieWithCredits extends MovieEvent {
 class SearchMovies extends MovieEvent {
   final String query;
   final int page;
+  final String? genre;
+  final int? year;
+  final double? minRating;
 
-  const SearchMovies(this.query, {this.page = 1});
+  const SearchMovies(
+    this.query, {
+    this.page = 1,
+    this.genre,
+    this.year,
+    this.minRating,
+  });
 
   @override
-  List<Object?> get props => [query, page];
+  List<Object?> get props => [query, page, genre, year, minRating];
 }
 
 class LoadSimilarMovies extends MovieEvent {
@@ -263,7 +272,29 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
   ) async {
     emit(MovieLoading());
     try {
-      final movies = await _movieRepository.searchMovies(event.query, page: event.page);
+      // Get movies from API
+      var movies = await _movieRepository.searchMovies(event.query, page: event.page);
+      
+      // Apply client-side filters
+      if (event.genre != null) {
+        movies = movies.where((movie) {
+          return movie.genres.any((genre) => genre.name == event.genre);
+        }).toList();
+      }
+      
+      if (event.year != null) {
+        movies = movies.where((movie) {
+          final releaseYear = DateTime.tryParse(movie.releaseDate)?.year;
+          return releaseYear == event.year;
+        }).toList();
+      }
+      
+      if (event.minRating != null && event.minRating! > 0) {
+        movies = movies.where((movie) {
+          return movie.voteAverage >= event.minRating!;
+        }).toList();
+      }
+      
       emit(MovieLoaded(movies));
     } catch (e) {
       emit(MovieError(e.toString()));

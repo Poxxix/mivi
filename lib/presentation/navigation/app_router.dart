@@ -5,7 +5,6 @@ import 'package:mivi/presentation/screens/home_screen.dart';
 import 'package:mivi/presentation/screens/movie_detail_screen.dart';
 import 'package:mivi/presentation/screens/search_screen.dart';
 import 'package:mivi/presentation/screens/favorites_screen.dart';
-import 'package:mivi/presentation/screens/watchlist_screen.dart';
 import 'package:mivi/presentation/screens/profile_screen.dart';
 import 'package:mivi/presentation/screens/edit_profile_screen.dart';
 import 'package:mivi/presentation/screens/auth/login_screen.dart';
@@ -85,10 +84,6 @@ class AppRouter {
           GoRoute(
             path: '/favorites',
             builder: (context, state) => const FavoritesScreen(),
-          ),
-          GoRoute(
-            path: '/watchlist',
-            builder: (context, state) => const WatchlistScreen(),
           ),
           GoRoute(
             path: '/profile',

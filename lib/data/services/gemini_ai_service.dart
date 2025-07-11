@@ -650,14 +650,7 @@ Remember: When recommending movies, be enthusiastic and provide context. The app
     );
   }
 
-  // Handle service errors with guaranteed response
-  AIResponse _handleError() {
-    return AIResponse(
-      content: "🎬 My AI brain had a quick hiccup, but I can still help you discover amazing movies! Here are some popular picks:",
-      movieRecommendations: _getTrendingMockMovies(),
-      suggestedActions: quickActions,
-    );
-  }
+
 
   // Health check
   Future<bool> isHealthy() async {

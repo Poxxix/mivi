@@ -454,15 +454,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             items: [
               _buildMenuItem(
                 colorScheme,
-                icon: Icons.bookmark_outline,
-                title: 'Watchlist',
-                subtitle: 'Movies to watch later',
-                onTap: () {
-                  context.push('/watchlist');
-                },
-              ),
-              _buildMenuItem(
-                colorScheme,
                 icon: Icons.favorite_outline,
                 title: 'Favorites',
                 subtitle: 'Your favorite movies',

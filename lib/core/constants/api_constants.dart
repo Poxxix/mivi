@@ -31,4 +31,45 @@ class ApiConstants {
   // Default values
   static const String defaultLanguage = 'en-US';
   static const int defaultPage = 1;
+
+  // Soundtrack API endpoints
+  static const String movieThemeApiBase = 'http://localhost:5000/api/v1'; // Local Movie Theme Song Database
+  static const String theAudioDbBase = 'https://www.theaudiodb.com/api/v1/json/1';
+  static const String musicBrainzBase = 'https://musicbrainz.org/ws/2';
+  
+  // Music platform search URLs
+  static const String spotifySearchBase = 'https://open.spotify.com/search';
+  static const String youtubeSearchBase = 'https://www.youtube.com/results';
+  static const String appleMusicSearchBase = 'https://music.apple.com/search';
+  
+  // TheAudioDB API key (free tier)
+  static const String theAudioDbApiKey = '1'; // Free public key
+  
+  // MusicBrainz user agent (required)
+  static const String musicBrainzUserAgent = 'Mivi/1.0 (contact@mivi.app)';
+  
+  // API timeouts
+  static const int apiTimeoutSeconds = 10;
+  static const int retryAttempts = 3;
+  
+  // Soundtrack API endpoints
+  static String getMovieThemeApiUrl(int movieId) => '$movieThemeApiBase/movies/$movieId';
+  static String getTheAudioDbSearchUrl(String query) => '$theAudioDbBase/searchalbum.php?s=${Uri.encodeComponent(query)}';
+  static String getMusicBrainzSearchUrl(String query) => '$musicBrainzBase/release-group?query=${Uri.encodeComponent(query)}&fmt=json&limit=5';
+  
+  // Search URL generators
+  static String generateSpotifySearchUrl(String movieTitle, String trackTitle) {
+    final query = Uri.encodeComponent('$movieTitle $trackTitle soundtrack');
+    return '$spotifySearchBase?q=$query';
+  }
+  
+  static String generateYouTubeSearchUrl(String movieTitle, String trackTitle) {
+    final query = Uri.encodeComponent('$movieTitle $trackTitle soundtrack');
+    return '$youtubeSearchBase?search_query=$query';
+  }
+  
+  static String generateAppleMusicSearchUrl(String movieTitle, String trackTitle) {
+    final query = Uri.encodeComponent('$movieTitle $trackTitle soundtrack');
+    return '$appleMusicSearchBase?term=$query';
+  }
 } 

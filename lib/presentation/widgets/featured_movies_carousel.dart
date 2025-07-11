@@ -143,7 +143,7 @@ class _FeaturedMoviesCarouselState extends State<FeaturedMoviesCarousel>
           children: [
             // Background Image
             CachedNetworkImage(
-              imageUrl: movie.backdropPath ?? movie.posterPath,
+              imageUrl: movie.backdropPath.isNotEmpty ? movie.backdropPath : movie.posterPath,
               fit: BoxFit.cover,
               placeholder: (context, url) => Container(
                 color: Theme.of(context).colorScheme.surfaceVariant,

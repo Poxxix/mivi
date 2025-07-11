@@ -7,8 +7,9 @@ import 'package:mivi/data/services/notification_service.dart';
 import 'package:mivi/data/services/guest_service.dart';
 import 'package:mivi/core/services/ai_chat_history_service.dart';
 import 'package:mivi/core/services/view_analytics_service.dart';
-import 'package:mivi/core/services/watchlist_service.dart';
 import 'package:mivi/core/services/view_history_service.dart';
+import 'package:mivi/core/services/voice_ai_service.dart';
+import 'package:mivi/core/services/soundtrack_audio_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // void main() {
@@ -37,11 +38,14 @@ Future<void> main() async {
   // Initialize view analytics service
   await ViewAnalyticsService.instance.initialize();
   
-  // Initialize watchlist service
-  await WatchlistService.instance.initialize();
-  
   // Initialize view history service
   await ViewHistoryService.instance.initialize();
+  
+  // Initialize Voice AI service
+  await VoiceAIService().initialize();
+  
+  // Initialize Soundtrack Audio service
+  await SoundtrackAudioService().initialize();
   
   runApp(
     ChangeNotifierProvider(

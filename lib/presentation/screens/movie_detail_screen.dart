@@ -7,7 +7,7 @@ import 'package:mivi/presentation/widgets/movie_detail_header.dart';
 import 'package:mivi/presentation/widgets/movie_info_section.dart';
 import 'package:mivi/presentation/widgets/horizontal_cast_scroller.dart';
 import 'package:mivi/presentation/widgets/horizontal_movie_scroller.dart';
-import 'package:mivi/presentation/widgets/movie_quotes_section.dart';
+import 'package:mivi/presentation/widgets/movie_soundtrack_section.dart';
 import 'package:mivi/core/services/view_analytics_service.dart';
 import 'package:mivi/core/services/view_history_service.dart';
 import 'package:mivi/core/utils/toast_utils.dart';
@@ -113,13 +113,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     });
   }
 
-  void _onCastMemberTap(CastMember castMember) {
-    // TODO: Navigate to cast member details
-  }
 
-  void _onSimilarMovieTap(Movie movie) {
-    context.push('/movie/${movie.id}', extra: movie);
-  }
 
   Future<void> _onPlayPressed() async {
     // Add haptic feedback for primary action
@@ -306,7 +300,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 ),
                 SliverToBoxAdapter(child: MovieInfoSection(movie: _movie)),
                 SliverToBoxAdapter(
-                  child: MovieQuotesSection(
+                  child: MovieSoundtrackSection(
                     movieId: _movie.id,
                     movieTitle: _movie.title,
                   ),

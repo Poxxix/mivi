@@ -9,8 +9,10 @@ import 'package:mivi/data/repositories/movie_repository.dart';
 import 'package:mivi/presentation/widgets/paginated_movie_cards.dart';
 import 'package:mivi/presentation/widgets/ai_model_selector.dart';
 import 'package:mivi/core/services/ai_chat_history_service.dart';
+import 'package:mivi/core/services/voice_ai_service.dart';
 import 'package:mivi/core/utils/haptic_utils.dart';
 import 'package:mivi/core/utils/toast_utils.dart';
+import 'dart:async';
 
 
 class AIChatScreen extends StatefulWidget {
@@ -33,12 +35,22 @@ class _AIChatScreenState extends State<AIChatScreen>
   final List<ChatMessage> _messages = [];
   ChatState _chatState = ChatState.idle;
   bool _isKeyboardVisible = false;
+  
+  // Voice AI variables
+  late VoiceAIService _voiceAIService;
+  bool _isListening = false;
+  bool _isSpeaking = false;
+  StreamSubscription<bool>? _listeningSubscription;
+  StreamSubscription<String>? _speechResultSubscription;
+  StreamSubscription<bool>? _speakingSubscription;
+  StreamSubscription<String>? _voiceErrorSubscription;
 
   @override
   void initState() {
     super.initState();
     _aiService = GeminiAIService(movieRepository: MovieRepository());
     _historyService = AIChatHistoryService.instance;
+    _voiceAIService = VoiceAIService();
     _fabAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -46,6 +58,9 @@ class _AIChatScreenState extends State<AIChatScreen>
     
     // Initialize chat
     _initializeChat();
+    
+    // Initialize voice
+    _initializeVoice();
     
     // Listen to focus changes for keyboard visibility
     _focusNode.addListener(() {
@@ -61,6 +76,14 @@ class _AIChatScreenState extends State<AIChatScreen>
     _scrollController.dispose();
     _focusNode.dispose();
     _fabAnimationController.dispose();
+    
+    // Clean up voice subscriptions
+    _listeningSubscription?.cancel();
+    _speechResultSubscription?.cancel();
+    _speakingSubscription?.cancel();
+    _voiceErrorSubscription?.cancel();
+    _voiceAIService.dispose();
+    
     super.dispose();
   }
 
@@ -81,6 +104,42 @@ class _AIChatScreenState extends State<AIChatScreen>
     if (_historyService.currentSessionId == null) {
       await _historyService.startNewSession();
     }
+  }
+
+  Future<void> _initializeVoice() async {
+    // Initialize voice AI service
+    await _voiceAIService.initialize();
+    
+    // Listen to voice events
+    _listeningSubscription = _voiceAIService.listeningStream.listen((isListening) {
+      if (mounted) {
+        setState(() {
+          _isListening = isListening;
+        });
+      }
+    });
+
+    _speechResultSubscription = _voiceAIService.speechResultStream.listen((result) {
+      if (mounted && result.isNotEmpty) {
+        setState(() {
+          _messageController.text = result;
+        });
+      }
+    });
+
+    _speakingSubscription = _voiceAIService.speakingStream.listen((isSpeaking) {
+      if (mounted) {
+        setState(() {
+          _isSpeaking = isSpeaking;
+        });
+      }
+    });
+
+    _voiceErrorSubscription = _voiceAIService.errorStream.listen((error) {
+      if (mounted) {
+        ToastUtils.showError(context, error);
+      }
+    });
   }
 
   void _addWelcomeMessage() {
@@ -145,6 +204,11 @@ class _AIChatScreenState extends State<AIChatScreen>
       // Save AI message to history
       _historyService.addMessage(aiMessage);
 
+      // Speak AI response if voice is enabled
+      if (_voiceAIService.isInitialized && aiResponse.content.isNotEmpty) {
+        _voiceAIService.speak(aiResponse.content);
+      }
+
       _scrollToBottom();
     } catch (e) {
       setState(() {
@@ -155,6 +219,58 @@ class _AIChatScreenState extends State<AIChatScreen>
 
   void _onQuickActionTap(QuickAction action) {
     _sendMessage(action.query);
+  }
+
+  Future<void> _toggleVoiceInput() async {
+    HapticUtils.selection();
+    
+    if (_isListening) {
+      await _voiceAIService.stopListening();
+    } else {
+      // Stop any ongoing speech first
+      if (_isSpeaking) {
+        await _voiceAIService.stopSpeaking();
+      }
+      
+      bool success = await _voiceAIService.startListening();
+      if (!success && mounted) {
+        ToastUtils.showError(
+          context, 
+          'Could not start voice input. Please check your microphone permissions.',
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleSpeechOutput() async {
+    HapticUtils.selection();
+    
+    if (_isSpeaking) {
+      await _voiceAIService.stopSpeaking();
+    } else {
+      // Read the last AI message if available
+      final lastAIMessage = _messages.lastWhere(
+        (msg) => msg.type == MessageType.ai || msg.type == MessageType.movieRecommendation,
+        orElse: () => ChatMessage(
+          id: '',
+          content: '',
+          type: MessageType.ai,
+          timestamp: DateTime.now(),
+        ),
+      );
+      
+      if (lastAIMessage.content.isNotEmpty) {
+        await _voiceAIService.speak(lastAIMessage.content);
+      } else {
+        ToastUtils.showInfo(context, 'No message to read');
+      }
+    }
+  }
+
+  void _sendVoiceMessage() {
+    if (_messageController.text.isNotEmpty) {
+      _sendMessage(_messageController.text);
+    }
   }
 
   void _scrollToBottom() {
@@ -517,14 +633,67 @@ class _AIChatScreenState extends State<AIChatScreen>
                   controller: _messageController,
                   focusNode: _focusNode,
                   decoration: InputDecoration(
-                    hintText: 'Ask me about movies...',
+                    hintText: _isListening 
+                        ? 'Listening... Speak now!' 
+                        : 'Ask me about movies...',
                     hintStyle: TextStyle(
-                      color: colorScheme.onSurface.withOpacity(0.6),
+                      color: _isListening 
+                          ? colorScheme.primary
+                          : colorScheme.onSurface.withOpacity(0.6),
                     ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 12,
+                    ),
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Voice input button
+                        IconButton(
+                          icon: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              color: _isListening 
+                                  ? colorScheme.primary.withOpacity(0.1)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              _isListening ? Icons.mic : Icons.mic_none,
+                              color: _isListening 
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurface.withOpacity(0.7),
+                              size: 20,
+                            ),
+                          ),
+                          onPressed: _toggleVoiceInput,
+                          tooltip: _isListening ? 'Stop listening' : 'Voice input',
+                        ),
+                        // Voice output button  
+                        IconButton(
+                          icon: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              color: _isSpeaking 
+                                  ? colorScheme.secondary.withOpacity(0.1)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              _isSpeaking ? Icons.volume_up : Icons.volume_up_outlined,
+                              color: _isSpeaking 
+                                  ? colorScheme.secondary
+                                  : colorScheme.onSurface.withOpacity(0.7),
+                              size: 20,
+                            ),
+                          ),
+                          onPressed: _toggleSpeechOutput,
+                          tooltip: _isSpeaking ? 'Stop speaking' : 'Read last message',
+                        ),
+                      ],
                     ),
                   ),
                   style: TextStyle(color: colorScheme.onSurface),

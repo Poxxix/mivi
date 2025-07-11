@@ -49,7 +49,9 @@ class _ViewAnalyticsWidgetState extends State<ViewAnalyticsWidget>
       _mostWatched = _analyticsService.getMostWatchedMovies(limit: 5);
       _viewTypeStats = _analyticsService.getViewTypeAnalytics();
     } catch (e) {
-      print('Error loading analytics: $e');
+      // Log error silently without using print in production
+      // Could use logging package or Firebase Analytics instead
+      debugPrint('Error loading analytics: $e');
     }
 
     setState(() => _isLoading = false);
