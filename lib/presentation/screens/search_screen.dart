@@ -9,6 +9,8 @@ import 'package:mivi/presentation/blocs/movie_bloc.dart';
 import 'package:mivi/presentation/widgets/skeleton_widgets.dart';
 import 'package:mivi/core/services/search_history_service.dart';
 import 'package:mivi/core/utils/haptic_utils.dart';
+import 'package:mivi/core/services/voice_search_service.dart';
+import 'package:mivi/core/utils/toast_utils.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -27,6 +29,28 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   Timer? _debounceTimer;
   List<String> _searchHistory = [];
   List<String> _searchSuggestions = [];
+  
+  // Voice search variables
+  final VoiceSearchService _voiceSearchService = VoiceSearchService();
+  bool _isListening = false;
+  StreamSubscription<bool>? _listeningSubscription;
+  StreamSubscription<String>? _speechResultSubscription;
+  StreamSubscription<String>? _errorSubscription;
+
+  // Filter properties
+  bool _showFilters = false;
+  String? _selectedGenre;
+  int? _selectedYear;
+  double _minRating = 0.0;
+  final List<String> _availableGenres = [
+    'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary',
+    'Drama', 'Family', 'Fantasy', 'History', 'Horror', 'Music', 'Mystery',
+    'Romance', 'Science Fiction', 'TV Movie', 'Thriller', 'War', 'Western'
+  ];
+  final List<int> _availableYears = List.generate(
+    DateTime.now().year - 1950 + 1, 
+    (index) => DateTime.now().year - index,
+  );
 
   @override
   void initState() {
@@ -57,6 +81,9 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     // Initialize search history
     _initializeSearchHistory();
     
+    // Initialize voice search
+    _initializeVoiceSearch();
+    
     _animationController.forward();
   }
 
@@ -68,6 +95,33 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     await SearchHistoryService.instance.initialize();
     setState(() {
       _searchHistory = SearchHistoryService.instance.searchHistory;
+    });
+  }
+
+  void _initializeVoiceSearch() {
+    // Listen to voice search events
+    _listeningSubscription = _voiceSearchService.listeningStream.listen((isListening) {
+      if (mounted) {
+        setState(() {
+          _isListening = isListening;
+        });
+      }
+    });
+
+    _speechResultSubscription = _voiceSearchService.speechResultStream.listen((result) {
+      if (mounted && result.isNotEmpty) {
+        setState(() {
+          _controller.text = result;
+          _query = result;
+        });
+        _onSearchChanged(result);
+      }
+    });
+
+    _errorSubscription = _voiceSearchService.errorStream.listen((error) {
+      if (mounted) {
+        ToastUtils.showError(context, error);
+      }
     });
   }
 
@@ -127,12 +181,60 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     _debounceTimer?.cancel();
   }
 
+  Future<void> _startVoiceSearch() async {
+    HapticUtils.selection();
+    
+    if (_isListening) {
+      await _voiceSearchService.stopListening();
+      return;
+    }
+
+    bool success = await _voiceSearchService.startListening();
+    if (!success && mounted) {
+      ToastUtils.showError(
+        context, 
+        'Could not start voice search. Please check your microphone permissions.',
+      );
+    }
+  }
+
+  void _toggleFilters() {
+    HapticUtils.selection();
+    setState(() {
+      _showFilters = !_showFilters;
+    });
+  }
+
+  void _clearFilters() {
+    HapticUtils.selection();
+    setState(() {
+      _selectedGenre = null;
+      _selectedYear = null;
+      _minRating = 0.0;
+      _showFilters = false;
+    });
+    if (_query.isNotEmpty) {
+      _onSearchChanged(_query);
+    }
+  }
+
+  bool get _hasActiveFilters {
+    return _selectedGenre != null || _selectedYear != null || _minRating > 0.0;
+  }
+
   @override
   void dispose() {
     _controller.dispose();
     _animationController.dispose();
     _searchBloc.close();
     _debounceTimer?.cancel();
+    
+    // Clean up voice search
+    _listeningSubscription?.cancel();
+    _speechResultSubscription?.cancel();
+    _errorSubscription?.cancel();
+    _voiceSearchService.cancel();
+    
     super.dispose();
   }
 
@@ -217,15 +319,83 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                               color: colorScheme.primary,
                               size: 24,
                             ),
-                            suffixIcon: _query.isNotEmpty
-                                ? IconButton(
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Filter button
+                                IconButton(
+                                  icon: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    decoration: BoxDecoration(
+                                      color: _hasActiveFilters || _showFilters
+                                          ? colorScheme.primary.withOpacity(0.1)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    padding: const EdgeInsets.all(4),
+                                    child: Stack(
+                                      children: [
+                                        Icon(
+                                          Icons.tune_rounded,
+                                          color: _hasActiveFilters || _showFilters
+                                              ? colorScheme.primary
+                                              : colorScheme.onBackground.withOpacity(0.7),
+                                          size: 20,
+                                        ),
+                                        if (_hasActiveFilters)
+                                          Positioned(
+                                            right: 0,
+                                            top: 0,
+                                            child: Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: colorScheme.primary,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  onPressed: _toggleFilters,
+                                  tooltip: 'Search filters',
+                                ),
+                                // Voice search button
+                                IconButton(
+                                  icon: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    decoration: BoxDecoration(
+                                      color: _isListening 
+                                          ? colorScheme.primary.withOpacity(0.1)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    padding: const EdgeInsets.all(4),
+                                    child: Icon(
+                                      _isListening ? Icons.mic : Icons.mic_none_rounded,
+                                      color: _isListening 
+                                          ? colorScheme.primary
+                                          : colorScheme.onBackground.withOpacity(0.7),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  onPressed: _startVoiceSearch,
+                                  tooltip: _isListening ? 'Stop listening' : 'Voice search',
+                                ),
+                                // Clear button (only show when there's text)
+                                if (_query.isNotEmpty)
+                                  IconButton(
                                     icon: Icon(
                                       Icons.clear_rounded,
                                       color: colorScheme.onBackground.withOpacity(0.7),
+                                      size: 20,
                                     ),
                                     onPressed: _clearSearch,
-                                  )
-                                : null,
+                                    tooltip: 'Clear search',
+                                  ),
+                              ],
+                            ),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -235,8 +405,16 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                           onChanged: _onSearchChanged,
                         ),
                       ),
+                          // Voice Search Listening Indicator
+                          if (_isListening)
+                            Positioned(
+                              top: 60,
+                              left: 0,
+                              right: 0,
+                              child: _buildListeningIndicator(context),
+                            ),
                           // Search Suggestions Dropdown
-                          if (_query.isNotEmpty && _searchSuggestions.isNotEmpty)
+                          if (_query.isNotEmpty && _searchSuggestions.isNotEmpty && !_isListening)
                             Positioned(
                               top: 60,
                               left: 0,
@@ -245,6 +423,9 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                             ),
                         ],
                       ),
+                      // Filters Panel
+                      if (_showFilters)
+                        _buildFiltersPanel(),
                     ],
                   ),
                 ),
@@ -583,6 +764,84 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     return spans;
   }
 
+  Widget _buildListeningIndicator(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: colorScheme.primary.withOpacity(0.2),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Animated microphone icon
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(8),
+              child: Icon(
+                Icons.mic,
+                color: colorScheme.primary,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Listening...',
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Speak now to search for movies',
+                    style: TextStyle(
+                      color: colorScheme.onBackground.withOpacity(0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Stop button
+            IconButton(
+              onPressed: _startVoiceSearch,
+              icon: Icon(
+                Icons.stop_circle_outlined,
+                color: colorScheme.error,
+                size: 20,
+              ),
+              tooltip: 'Stop listening',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSearchResults(BuildContext context) {
     // ignore: unused_local_variable
     final colorScheme = Theme.of(context).colorScheme;
@@ -856,6 +1115,183 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildFiltersPanel() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: colorScheme.primary.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(
+                Icons.tune_rounded,
+                color: colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Search Filters',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const Spacer(),
+              if (_hasActiveFilters)
+                TextButton(
+                  onPressed: _clearFilters,
+                  child: Text(
+                    'Clear All',
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Genre Filter
+          Text(
+            'Genre',
+            style: textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _availableGenres.map((genre) {
+              final isSelected = _selectedGenre == genre;
+              return FilterChip(
+                label: Text(genre),
+                selected: isSelected,
+                onSelected: (selected) {
+                  HapticUtils.selection();
+                  setState(() {
+                    _selectedGenre = selected ? genre : null;
+                  });
+                  if (_query.isNotEmpty) {
+                    _onSearchChanged(_query);
+                  }
+                },
+                selectedColor: colorScheme.primary.withOpacity(0.2),
+                checkmarkColor: colorScheme.primary,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+
+          // Year Filter
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Year',
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<int>(
+                      value: _selectedYear,
+                      hint: const Text('Any year'),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: colorScheme.outline),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.5)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: colorScheme.primary),
+                        ),
+                      ),
+                      items: _availableYears.map((year) {
+                        return DropdownMenuItem(
+                          value: year,
+                          child: Text(year.toString()),
+                        );
+                      }).toList(),
+                      onChanged: (year) {
+                        HapticUtils.selection();
+                        setState(() {
+                          _selectedYear = year;
+                        });
+                        if (_query.isNotEmpty) {
+                          _onSearchChanged(_query);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Rating Filter
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Min Rating: ${_minRating.toStringAsFixed(1)}',
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Slider(
+                      value: _minRating,
+                      min: 0.0,
+                      max: 10.0,
+                      divisions: 20,
+                      activeColor: colorScheme.primary,
+                      onChanged: (rating) {
+                        setState(() {
+                          _minRating = rating;
+                        });
+                      },
+                      onChangeEnd: (rating) {
+                        HapticUtils.selection();
+                        if (_query.isNotEmpty) {
+                          _onSearchChanged(_query);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

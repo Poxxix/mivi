@@ -9,6 +9,7 @@ import 'package:mivi/presentation/widgets/horizontal_cast_scroller.dart';
 import 'package:mivi/presentation/widgets/horizontal_movie_scroller.dart';
 import 'package:mivi/presentation/widgets/movie_quotes_section.dart';
 import 'package:mivi/core/services/view_analytics_service.dart';
+import 'package:mivi/core/services/view_history_service.dart';
 import 'package:mivi/core/utils/toast_utils.dart';
 import 'package:mivi/core/utils/haptic_utils.dart';
 
@@ -38,6 +39,12 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     _movie = widget.movie;
     _fetchMovieDetail();
     _startViewSession();
+    _addToViewHistory();
+  }
+
+  Future<void> _addToViewHistory() async {
+    // Add movie to view history when user opens detail screen
+    await ViewHistoryService.instance.addToHistory(_movie);
   }
 
   @override

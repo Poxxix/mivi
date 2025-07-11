@@ -5,6 +5,7 @@ import 'package:mivi/data/mock_data/mock_movies.dart';
 import 'package:mivi/core/utils/toast_utils.dart';
 import 'package:mivi/core/utils/haptic_utils.dart';
 import 'package:mivi/presentation/widgets/favorite_category_helper.dart';
+import 'package:mivi/core/services/watchlist_service.dart';
 
 class MovieCard extends StatefulWidget {
   final Movie movie;
@@ -34,6 +35,7 @@ class _MovieCardState extends State<MovieCard>
   bool _isPressed = false;
   // ignore: unused_field
   bool _isHovered = false;
+  bool _isInWatchlist = false;
 
 
   @override
@@ -59,6 +61,15 @@ class _MovieCardState extends State<MovieCard>
     _borderAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _hoverController, curve: Curves.easeOutCubic),
     );
+
+    // Check watchlist status
+    _checkWatchlistStatus();
+  }
+
+  void _checkWatchlistStatus() {
+    setState(() {
+      _isInWatchlist = WatchlistService.instance.isInWatchlist(widget.movie);
+    });
   }
 
   @override
@@ -124,6 +135,33 @@ class _MovieCardState extends State<MovieCard>
     
     // Also call the optional callback if provided
     widget.onFavoriteToggle?.call();
+  }
+
+  void _handleWatchlistToggle() async {
+    // Add haptic feedback
+    HapticUtils.selection();
+    
+    final success = await WatchlistService.instance.toggleWatchlist(widget.movie);
+    
+    if (success && mounted) {
+      setState(() {
+        _isInWatchlist = WatchlistService.instance.isInWatchlist(widget.movie);
+      });
+
+      if (_isInWatchlist) {
+        ToastUtils.showSuccess(
+          context,
+          '${widget.movie.title} added to watchlist',
+          icon: Icons.bookmark,
+        );
+      } else {
+        ToastUtils.showInfo(
+          context,
+          '${widget.movie.title} removed from watchlist',
+          icon: Icons.bookmark_border,
+        );
+      }
+    }
   }
 
   Future<void> _showCategorySelector() async {
@@ -317,6 +355,52 @@ class _MovieCardState extends State<MovieCard>
                           ),
                         ),
                         
+                        // Watchlist button
+                        if (widget.showFavoriteButton)
+                          Positioned(
+                            top: 12,
+                            left: 12,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _handleWatchlistToggle(),
+                                borderRadius: BorderRadius.circular(25),
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.black.withOpacity(0.8),
+                                        Colors.black.withOpacity(0.6),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(25),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.2),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.4),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    child: Icon(
+                                      _isInWatchlist ? Icons.bookmark : Icons.bookmark_border,
+                                      key: ValueKey(_isInWatchlist),
+                                      color: _isInWatchlist ? Colors.blue.shade400 : Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
                         // Favorite button với thiết kế nâng cao
                         if (widget.showFavoriteButton)
                           Positioned(

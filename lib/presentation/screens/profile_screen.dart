@@ -447,6 +447,35 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       ),
       child: Column(
         children: [
+          // My Lists
+          _buildMenuSection(
+            colorScheme,
+            title: 'My Lists',
+            items: [
+              _buildMenuItem(
+                colorScheme,
+                icon: Icons.bookmark_outline,
+                title: 'Watchlist',
+                subtitle: 'Movies to watch later',
+                onTap: () {
+                  context.push('/watchlist');
+                },
+              ),
+              _buildMenuItem(
+                colorScheme,
+                icon: Icons.favorite_outline,
+                title: 'Favorites',
+                subtitle: 'Your favorite movies',
+                onTap: () {
+                  context.push('/favorites');
+                },
+              ),
+            ],
+          ),
+          Divider(
+            color: colorScheme.surfaceVariant.withOpacity(0.5),
+            height: 1,
+          ),
           // App Settings
           _buildMenuSection(
             colorScheme,
