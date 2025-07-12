@@ -55,6 +55,9 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
     });
 
     try {
+      // Show Last.fm API loading state
+      print('🎵 Fetching from Last.fm API...');
+      
       // Use the new method with fallback
       final soundtrack = await _soundtrackService.getMovieSoundtrackWithFallback(
         widget.movieId, 
@@ -64,6 +67,9 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
       print('🎵 Soundtrack service returned: ${soundtrack != null ? "NOT NULL" : "NULL"}'); // Debug
       if (soundtrack != null) {
         print('🎵 Soundtrack details: movieId=${soundtrack.movieId}, title="${soundtrack.movieTitle}", tracks=${soundtrack.tracks.length}'); // Debug
+        if (soundtrack.albumArtUrl != null) {
+          print('🎵 Found album artwork from API');
+        }
         for (int i = 0; i < soundtrack.tracks.length; i++) {
           final track = soundtrack.tracks[i];
           print('🎵 Track $i: "${track.title}" by "${track.artist}", audioUrl: ${track.audioUrl != null ? "HAS_URL" : "NO_URL"}'); // Debug
@@ -123,36 +129,7 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
                   ),
                 ),
               ),
-              // Debug info
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'ID: ${widget.movieId}',
-                  style: TextStyle(
-                    color: colorScheme.onPrimaryContainer,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Test audio button
-              Container(
-                width: 40,
-                height: 32,
-                child: ElevatedButton(
-                  onPressed: _testAudio,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: Icon(Icons.volume_up, size: 16),
-                ),
-              ),
+
             ],
           ),
           
@@ -212,11 +189,11 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _searchOnPlatform('spotify'),
-                        icon: const Icon(Icons.music_note, size: 16),
-                        label: const Text('Search Spotify'),
+                        onPressed: () => _searchOnPlatform('youtube'),
+                        icon: const Icon(Icons.play_circle, size: 16),
+                        label: const Text('Search YouTube'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
+                          backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
                         ),
                       ),
@@ -224,11 +201,11 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _searchOnPlatform('youtube'),
-                        icon: const Icon(Icons.play_circle, size: 16),
-                        label: const Text('Search YouTube'),
+                        onPressed: () => _searchOnPlatform('spotify'),
+                        icon: const Icon(Icons.music_note, size: 16),
+                        label: const Text('Search Spotify'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
                         ),
                       ),
@@ -241,10 +218,60 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Soundtrack info with main play button
+                // Soundtrack info with album artwork and main play button
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Album artwork (if available from Last.fm)
+                    if (_soundtrack!.albumArtUrl != null)
+                      Container(
+                        width: 80,
+                        height: 80,
+                        margin: const EdgeInsets.only(right: 16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            _soundtrack!.albumArtUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: colorScheme.surfaceContainerHighest,
+                                child: Icon(
+                                  Icons.album,
+                                  color: colorScheme.onSurfaceVariant,
+                                  size: 32,
+                                ),
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: colorScheme.surfaceContainerHighest,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                        : null,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    
                     // Main play button
                     Container(
                       width: 60,
@@ -297,6 +324,7 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
                               fontSize: 12,
                             ),
                           ),
+
                         ],
                       ),
                     ),
@@ -305,39 +333,7 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
                 
                 const SizedBox(height: 16),
                 
-                // Check if this is a generated/suggested soundtrack
-                if (_isGeneratedSoundtrack())
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: colorScheme.primary.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.auto_awesome,
-                          color: colorScheme.primary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'AI-generated soundtrack suggestions based on movie genre and style',
-                            style: TextStyle(
-                              color: colorScheme.onPrimaryContainer,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+
                 
                 // Track list
                 Text(
@@ -580,11 +576,11 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _searchOnPlatform('spotify'),
-                        icon: const Icon(Icons.music_note, size: 16),
-                        label: const Text('Spotify'),
+                        onPressed: () => _searchOnPlatform('youtube'),
+                        icon: const Icon(Icons.play_circle, size: 16),
+                        label: const Text('YouTube'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
+                          backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
                         ),
                       ),
@@ -592,11 +588,11 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _searchOnPlatform('youtube'),
-                        icon: const Icon(Icons.play_circle, size: 16),
-                        label: const Text('YouTube'),
+                        onPressed: () => _searchOnPlatform('spotify'),
+                        icon: const Icon(Icons.music_note, size: 16),
+                        label: const Text('Spotify'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
                         ),
                       ),
@@ -609,6 +605,8 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
       ),
     );
   }
+
+
 
   // Check if this is a generated soundtrack (fallback)
   bool _isGeneratedSoundtrack() {
@@ -719,18 +717,30 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
   }
 
   // Search for a specific track
-  void _searchForTrack(SoundtrackTrack track) {
+  void _searchForTrack(SoundtrackTrack track) async {
     ToastUtils.showInfo(
       context,
-      'Searching for: ${track.title}',
-      icon: Icons.search,
+      'Opening YouTube Music for: ${track.title}',
+      icon: Icons.play_circle,
     );
     
-    // Launch search URL (Spotify as default)
-    if (track.spotifyUrl != null) {
-      _soundtrackService.launchMusicService(track, 'spotify');
-    } else if (track.youtubeUrl != null) {
-      _soundtrackService.launchMusicService(track, 'youtube');
+    // Try to launch YouTube video directly
+    final success = await _soundtrackService.launchYouTubeVideo(
+      widget.movieTitle, 
+      track.title
+    );
+    
+    if (!success && mounted) {
+      // Fallback to Spotify if YouTube fails
+      ToastUtils.showInfo(
+        context,
+        'Opening Spotify search',
+        icon: Icons.music_note,
+      );
+      
+      if (track.spotifyUrl != null) {
+        _soundtrackService.launchMusicService(track, 'spotify');
+      }
     }
   }
 
@@ -777,24 +787,43 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
   }
 
   // Search on a specific platform
-  void _searchOnPlatform(String platform) {
+  void _searchOnPlatform(String platform) async {
     HapticUtils.light();
     
-    final searchUrls = _soundtrackService.generateSearchUrls(
-      widget.movieTitle, 
-      _soundtrack?.composer,
-    );
-    
-    final url = searchUrls[platform];
-    if (url != null) {
-      ToastUtils.showSuccess(
+    if (platform == 'youtube') {
+      // For YouTube, try to get first video directly
+      ToastUtils.showInfo(
         context, 
-        'Opening ${platform.toUpperCase()} search',
-        icon: platform == 'spotify' ? Icons.music_note : Icons.play_circle,
+        'Opening YouTube Music...',
+        icon: Icons.play_circle,
       );
       
-      // Launch the URL
-      _launchUrl(url);
+      final success = await _soundtrackService.launchYouTubeVideo(
+        widget.movieTitle, 
+        'soundtrack'
+      );
+      
+      if (!success && mounted) {
+        ToastUtils.showError(context, 'Could not open YouTube');
+      }
+    } else {
+      // For other platforms, use regular search
+      final searchUrls = _soundtrackService.generateSearchUrls(
+        widget.movieTitle, 
+        _soundtrack?.composer,
+      );
+      
+      final url = searchUrls[platform];
+      if (url != null) {
+        ToastUtils.showSuccess(
+          context, 
+          'Opening ${platform.toUpperCase()} search',
+          icon: platform == 'spotify' ? Icons.music_note : Icons.play_circle,
+        );
+        
+        // Launch the URL
+        _launchUrl(url);
+      }
     }
   }
 
@@ -812,10 +841,5 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
     }
   }
 
-  // Test audio service functionality
-  void _testAudio() {
-    HapticUtils.light();
-    ToastUtils.showInfo(context, 'Testing audio service...');
-    _audioService.testAudioService();
-  }
+
 } 

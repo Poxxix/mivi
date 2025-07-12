@@ -32,6 +32,13 @@ class ApiConstants {
   static const String defaultLanguage = 'en-US';
   static const int defaultPage = 1;
 
+  // Last.fm API Configuration
+  static const String lastFmApiKey = 'a94db828b76d601cf68cefffffafcb4b';
+  static const String lastFmBaseUrl = 'https://ws.audioscrobbler.com/2.0/';
+  static const String lastFmFormat = 'json';
+  
+
+  
   // Soundtrack API endpoints
   static const String movieThemeApiBase = 'http://localhost:5000/api/v1'; // Local Movie Theme Song Database
   static const String theAudioDbBase = 'https://www.theaudiodb.com/api/v1/json/1';
@@ -56,6 +63,30 @@ class ApiConstants {
   static String getMovieThemeApiUrl(int movieId) => '$movieThemeApiBase/movies/$movieId';
   static String getTheAudioDbSearchUrl(String query) => '$theAudioDbBase/searchalbum.php?s=${Uri.encodeComponent(query)}';
   static String getMusicBrainzSearchUrl(String query) => '$musicBrainzBase/release-group?query=${Uri.encodeComponent(query)}&fmt=json&limit=5';
+  
+  // Last.fm API endpoints
+  static String getLastFmAlbumSearchUrl(String query) {
+    final encodedQuery = Uri.encodeComponent(query);
+    return '$lastFmBaseUrl?method=album.search&album=$encodedQuery&api_key=$lastFmApiKey&format=$lastFmFormat&limit=10';
+  }
+  
+  static String getLastFmAlbumInfoUrl(String artist, String album) {
+    final encodedArtist = Uri.encodeComponent(artist);
+    final encodedAlbum = Uri.encodeComponent(album);
+    return '$lastFmBaseUrl?method=album.getinfo&api_key=$lastFmApiKey&artist=$encodedArtist&album=$encodedAlbum&format=$lastFmFormat';
+  }
+  
+  static String getLastFmArtistTopAlbumsUrl(String artist) {
+    final encodedArtist = Uri.encodeComponent(artist);
+    return '$lastFmBaseUrl?method=artist.gettopalbums&artist=$encodedArtist&api_key=$lastFmApiKey&format=$lastFmFormat&limit=10';
+  }
+  
+  static String getLastFmTrackSearchUrl(String query) {
+    final encodedQuery = Uri.encodeComponent(query);
+    return '$lastFmBaseUrl?method=track.search&track=$encodedQuery&api_key=$lastFmApiKey&format=$lastFmFormat&limit=20';
+  }
+  
+
   
   // Search URL generators
   static String generateSpotifySearchUrl(String movieTitle, String trackTitle) {

@@ -514,19 +514,276 @@ class MovieSoundtrackService {
     try {
       print('🎵 Fetching real soundtrack data for movie ID: $movieId');
       
-      // Try Movie Theme Song Database first (if available locally)
+      // 1. Try Last.fm API first (highest quality data)
+      final lastFmResult = await _searchLastFmSoundtrack(movieTitle);
+      if (lastFmResult != null && lastFmResult.tracks.isNotEmpty) {
+        print('🎵 Found data from Last.fm API with ${lastFmResult.tracks.length} tracks');
+        return lastFmResult;
+      }
+      
+      // 2. Try Movie Theme Song Database (if available locally)
       final soundtrack = await _fetchFromMovieThemeDB(movieId);
       if (soundtrack != null) {
         print('🎵 Found data from Movie Theme DB');
         return soundtrack;
       }
       
-      // Fallback to search by movie title
+      // 3. Fallback to search by movie title
       return await _searchSoundtrackByTitle(movieTitle);
     } catch (e) {
       print('❌ Error fetching real soundtrack: $e');
       return null;
     }
+  }
+
+  /// Last.fm API Integration Methods
+  
+  /// Search Last.fm for movie soundtrack
+  Future<MovieSoundtrack?> _searchLastFmSoundtrack(String movieTitle) async {
+    try {
+      print('🎵 Searching Last.fm for: $movieTitle');
+      
+      // Try multiple search strategies
+      var soundtrack = await _searchLastFmAlbums('$movieTitle soundtrack');
+      if (soundtrack != null) return soundtrack;
+      
+      soundtrack = await _searchLastFmAlbums('$movieTitle original soundtrack');
+      if (soundtrack != null) return soundtrack;
+      
+      soundtrack = await _searchLastFmAlbums('$movieTitle original motion picture soundtrack');
+      if (soundtrack != null) return soundtrack;
+      
+      // Try searching by composer if we can guess one
+      final suggestedComposer = _getSuggestedComposer(movieTitle);
+      if (suggestedComposer != 'Various Artists') {
+        soundtrack = await _searchLastFmByComposer(movieTitle, suggestedComposer);
+        if (soundtrack != null) return soundtrack;
+      }
+      
+      return null;
+    } catch (e) {
+      print('❌ Last.fm search error: $e');
+      return null;
+    }
+  }
+  
+  /// Search Last.fm albums
+  Future<MovieSoundtrack?> _searchLastFmAlbums(String query) async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.getLastFmAlbumSearchUrl(query)),
+      ).timeout(Duration(seconds: ApiConstants.apiTimeoutSeconds));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return await _parseLastFmAlbumSearchResponse(data, query);
+      }
+    } catch (e) {
+      print('🔍 Last.fm album search failed for "$query": $e');
+    }
+    return null;
+  }
+  
+  /// Search Last.fm by composer
+  Future<MovieSoundtrack?> _searchLastFmByComposer(String movieTitle, String composer) async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.getLastFmArtistTopAlbumsUrl(composer)),
+      ).timeout(Duration(seconds: ApiConstants.apiTimeoutSeconds));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return await _parseLastFmArtistAlbumsResponse(data, movieTitle, composer);
+      }
+    } catch (e) {
+      print('🔍 Last.fm composer search failed for "$composer": $e');
+    }
+    return null;
+  }
+  
+  /// Get detailed album info from Last.fm
+  Future<MovieSoundtrack?> _getLastFmAlbumTracks(String artist, String album, String movieTitle) async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.getLastFmAlbumInfoUrl(artist, album)),
+      ).timeout(Duration(seconds: ApiConstants.apiTimeoutSeconds));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return _parseLastFmAlbumInfoResponse(data, movieTitle);
+      }
+    } catch (e) {
+      print('🔍 Last.fm album info failed for "$artist - $album": $e');
+    }
+    return null;
+  }
+  
+  /// Parse Last.fm album search response
+  Future<MovieSoundtrack?> _parseLastFmAlbumSearchResponse(Map<String, dynamic> data, String originalQuery) async {
+    try {
+      final results = data['results'];
+      if (results == null) return null;
+      
+      final albumMatches = results['albummatches'];
+      if (albumMatches == null) return null;
+      
+      final albums = albumMatches['album'];
+      if (albums == null || albums.isEmpty) return null;
+      
+      // Find the most relevant soundtrack album
+      for (final album in albums) {
+        final albumName = album['name']?.toString().toLowerCase() ?? '';
+        final artistName = album['artist']?.toString() ?? '';
+        
+        // Check if this looks like a soundtrack
+        if (albumName.contains('soundtrack') || 
+            albumName.contains('original') ||
+            albumName.contains('score') ||
+            albumName.contains('music')) {
+          
+          // Get detailed track information
+          final detailedSoundtrack = await _getLastFmAlbumTracks(artistName, album['name'], originalQuery);
+          if (detailedSoundtrack != null && detailedSoundtrack.tracks.isNotEmpty) {
+            return detailedSoundtrack;
+          }
+        }
+      }
+      
+      // If no perfect match, try the first album
+      if (albums.isNotEmpty) {
+        final firstAlbum = albums.first;
+        final detailedSoundtrack = await _getLastFmAlbumTracks(
+          firstAlbum['artist']?.toString() ?? '', 
+          firstAlbum['name']?.toString() ?? '', 
+          originalQuery
+        );
+        if (detailedSoundtrack != null && detailedSoundtrack.tracks.isNotEmpty) {
+          return detailedSoundtrack;
+        }
+      }
+      
+    } catch (e) {
+      print('❌ Error parsing Last.fm album search: $e');
+    }
+    return null;
+  }
+  
+  /// Parse Last.fm artist albums response
+  Future<MovieSoundtrack?> _parseLastFmArtistAlbumsResponse(Map<String, dynamic> data, String movieTitle, String composer) async {
+    try {
+      final topAlbums = data['topalbums'];
+      if (topAlbums == null) return null;
+      
+      final albums = topAlbums['album'];
+      if (albums == null || albums.isEmpty) return null;
+      
+      final movieTitleLower = movieTitle.toLowerCase();
+      
+      // Look for albums that match the movie title
+      for (final album in albums) {
+        final albumName = album['name']?.toString().toLowerCase() ?? '';
+        
+        if (albumName.contains(movieTitleLower) ||
+            albumName.contains('soundtrack') ||
+            albumName.contains('score')) {
+          
+          final detailedSoundtrack = await _getLastFmAlbumTracks(
+            composer, 
+            album['name']?.toString() ?? '', 
+            movieTitle
+          );
+          if (detailedSoundtrack != null && detailedSoundtrack.tracks.isNotEmpty) {
+            return detailedSoundtrack;
+          }
+        }
+      }
+      
+    } catch (e) {
+      print('❌ Error parsing Last.fm artist albums: $e');
+    }
+    return null;
+  }
+  
+  /// Parse Last.fm album info response
+  MovieSoundtrack? _parseLastFmAlbumInfoResponse(Map<String, dynamic> data, String movieTitle) {
+    try {
+      final albumData = data['album'];
+      if (albumData == null) return null;
+      
+      final tracks = <SoundtrackTrack>[];
+      final albumTracks = albumData['tracks'];
+      
+      if (albumTracks != null && albumTracks['track'] != null) {
+        final trackList = albumTracks['track'];
+        
+        for (int i = 0; i < trackList.length; i++) {
+          final track = trackList[i];
+          final trackName = track['name']?.toString() ?? 'Unknown Track';
+          final artistName = track['artist']?['name']?.toString() ?? albumData['artist']?.toString() ?? 'Unknown Artist';
+          final durationStr = track['duration']?.toString() ?? '0';
+          final duration = int.tryParse(durationStr) ?? 180;
+          
+          tracks.add(SoundtrackTrack(
+            title: trackName,
+            artist: artistName,
+            album: albumData['name']?.toString() ?? movieTitle,
+            duration: duration,
+            isMainTheme: i == 0, // First track is usually main theme
+            spotifyUrl: ApiConstants.generateSpotifySearchUrl(movieTitle, trackName),
+            youtubeUrl: ApiConstants.generateYouTubeSearchUrl(movieTitle, trackName),
+            audioUrl: _getWorkingAudioUrl(),
+          ));
+        }
+      }
+      
+      // If no tracks found, create some based on album info
+      if (tracks.isEmpty) {
+        tracks.add(SoundtrackTrack(
+          title: 'Main Theme',
+          artist: albumData['artist']?.toString() ?? 'Unknown Artist',
+          album: albumData['name']?.toString() ?? movieTitle,
+          duration: 240,
+          isMainTheme: true,
+          spotifyUrl: ApiConstants.generateSpotifySearchUrl(movieTitle, 'main theme'),
+          youtubeUrl: ApiConstants.generateYouTubeSearchUrl(movieTitle, 'soundtrack'),
+          audioUrl: _getWorkingAudioUrl(),
+        ));
+      }
+      
+      return MovieSoundtrack(
+        movieId: movieTitle.hashCode.abs(),
+        movieTitle: movieTitle,
+        tracks: tracks,
+        composer: albumData['artist']?.toString(),
+        albumArtUrl: _extractLastFmImageUrl(albumData['image']),
+      );
+      
+    } catch (e) {
+      print('❌ Error parsing Last.fm album info: $e');
+      return null;
+    }
+  }
+  
+  /// Extract image URL from Last.fm image array
+  String? _extractLastFmImageUrl(dynamic images) {
+    try {
+      if (images is List && images.isNotEmpty) {
+        // Find the largest image (usually 'extralarge' or 'large')
+        for (final image in images.reversed) {
+          final size = image['size']?.toString() ?? '';
+          final url = image['#text']?.toString() ?? '';
+          if ((size == 'extralarge' || size == 'large' || size == 'medium') && url.isNotEmpty) {
+            return url;
+          }
+        }
+        // Fallback to any available image
+        final firstImage = images.first;
+        return firstImage['#text']?.toString();
+      }
+    } catch (e) {
+      print('Error extracting Last.fm image: $e');
+    }
+    return null;
   }
 
   /// Fetch from Movie Theme Song Database (GitHub project)
@@ -984,5 +1241,58 @@ class MovieSoundtrackService {
       "https://commondatastorage.googleapis.com/codeskulptor-demos/GalaxyInvaders/theme_01.mp3",
     ];
     return urls[_random.nextInt(urls.length)];
+  }
+
+  /// YouTube Search Methods (No API required)
+  
+  /// Generate YouTube search URL that opens first result automatically
+  String generateYouTubeFirstVideoUrl(String movieTitle, String trackTitle) {
+    final query = '$movieTitle $trackTitle soundtrack';
+    final encodedQuery = Uri.encodeComponent(query);
+    
+    // Use YouTube's "I'm Feeling Lucky" style URL that tends to go to first result
+    // This uses YouTube's search with specific parameters to get best match
+    return 'https://www.youtube.com/results?search_query=$encodedQuery&sp=EgIQAQ%253D%253D';
+  }
+  
+  /// Alternative: Use YouTube Music search which often goes directly to videos
+  String generateYouTubeMusicUrl(String movieTitle, String trackTitle) {
+    final query = '$movieTitle $trackTitle';
+    final encodedQuery = Uri.encodeComponent(query);
+    return 'https://music.youtube.com/search?q=$encodedQuery';
+  }
+  
+  /// Launch YouTube with smart URL that aims for first result
+  Future<bool> launchYouTubeVideo(String movieTitle, String trackTitle) async {
+    try {
+      print('🎬 Opening YouTube for: $movieTitle - $trackTitle');
+      
+      // Try YouTube Music first (better for soundtrack discovery)
+      final musicUrl = generateYouTubeMusicUrl(movieTitle, trackTitle);
+      final musicUri = Uri.parse(musicUrl);
+      
+      if (await canLaunchUrl(musicUri)) {
+        final success = await launchUrl(musicUri, mode: LaunchMode.externalApplication);
+        if (success) {
+          print('✅ Opened YouTube Music');
+          return true;
+        }
+      }
+      
+      // Fallback to regular YouTube search
+      final searchUrl = generateYouTubeFirstVideoUrl(movieTitle, trackTitle);
+      final searchUri = Uri.parse(searchUrl);
+      
+      if (await canLaunchUrl(searchUri)) {
+        final success = await launchUrl(searchUri, mode: LaunchMode.externalApplication);
+        print('✅ Opened YouTube search');
+        return success;
+      }
+      
+    } catch (e) {
+      print('❌ Error launching YouTube: $e');
+    }
+    
+    return false;
   }
 } 
