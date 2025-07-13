@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,6 +29,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   bool _isLoading = false;
   bool _isImageLoading = false;
   File? _selectedImage;
+  Uint8List? _selectedImageBytes; // For web image preview
   String? _currentAvatarUrl;
   Map<String, dynamic>? _currentProfile;
 
@@ -40,12 +43,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
     _animationController.forward();
     _loadCurrentProfile();
   }
@@ -61,7 +62,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   Future<void> _loadCurrentProfile() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {
@@ -80,7 +81,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       _emailController.text = response['email'] ?? user.email ?? '';
       _bioController.text = response['bio'] ?? '';
       _currentAvatarUrl = response['avatar_url'];
-      
     } catch (e) {
       if (mounted) {
         ToastUtils.showError(
@@ -95,9 +95,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   Future<void> _pickImage() async {
     HapticUtils.medium();
-    
     final ImagePicker picker = ImagePicker();
-    
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -121,9 +119,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             const SizedBox(height: 20),
             Text(
               'Choose Photo',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Row(
@@ -141,7 +139,18 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                         imageQuality: 80,
                       );
                       if (image != null) {
-                        setState(() => _selectedImage = File(image.path));
+                        if (kIsWeb) {
+                          final bytes = await image.readAsBytes();
+                          setState(() {
+                            _selectedImageBytes = bytes;
+                            _selectedImage = null;
+                          });
+                        } else {
+                          setState(() {
+                            _selectedImage = File(image.path);
+                            _selectedImageBytes = null;
+                          });
+                        }
                       }
                     },
                   ),
@@ -160,7 +169,18 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                         imageQuality: 80,
                       );
                       if (image != null) {
-                        setState(() => _selectedImage = File(image.path));
+                        if (kIsWeb) {
+                          final bytes = await image.readAsBytes();
+                          setState(() {
+                            _selectedImageBytes = bytes;
+                            _selectedImage = null;
+                          });
+                        } else {
+                          setState(() {
+                            _selectedImage = File(image.path);
+                            _selectedImageBytes = null;
+                          });
+                        }
                       }
                     },
                   ),
@@ -172,12 +192,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(context);
-                    setState(() {
-                      _selectedImage = null;
-                      _currentAvatarUrl = null;
-                    });
+                    await _removeAvatar();
                   },
                   icon: const Icon(Icons.delete_outline),
                   label: const Text('Remove Photo'),
@@ -188,11 +205,49 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                 ),
               ),
             ],
-            const SizedBox(height: 20),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _removeAvatar() async {
+    setState(() => _isImageLoading = true);
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null || _currentAvatarUrl == null) {
+        setState(() {
+          _selectedImage = null;
+          _currentAvatarUrl = null;
+        });
+        return;
+      }
+      // Extract file name from URL
+      final uri = Uri.parse(_currentAvatarUrl!);
+      final segments = uri.pathSegments;
+      final fileName = segments.isNotEmpty ? segments.last : null;
+      if (fileName != null) {
+        await Supabase.instance.client.storage.from('avatars').remove([
+          fileName,
+        ]);
+      }
+      setState(() {
+        _selectedImage = null;
+        _currentAvatarUrl = null;
+      });
+      if (mounted) {
+        ToastUtils.showSuccess(context, 'Avatar removed!');
+      }
+    } catch (e) {
+      if (mounted) {
+        ToastUtils.showError(
+          context,
+          'Failed to remove avatar:  {e.toString()}',
+        );
+      }
+    } finally {
+      setState(() => _isImageLoading = false);
+    }
   }
 
   Widget _buildImageOption({
@@ -209,22 +264,20 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceVariant.withOpacity(0.5),
           ),
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              size: 32,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            Icon(icon, size: 32, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 8),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -233,24 +286,37 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   }
 
   Future<String?> _uploadAvatar() async {
-    if (_selectedImage == null) return _currentAvatarUrl;
-
+    if (_selectedImage == null && _selectedImageBytes == null)
+      return _currentAvatarUrl;
     setState(() => _isImageLoading = true);
-
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) return null;
-
-      final fileName = 'avatar_${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      
-      await Supabase.instance.client.storage
-          .from('avatars')
-          .upload(fileName, _selectedImage!);
-
+      // Nếu có avatar cũ, xóa file cũ trước khi upload mới
+      if (_currentAvatarUrl != null) {
+        final uri = Uri.parse(_currentAvatarUrl!);
+        final segments = uri.pathSegments;
+        final fileName = segments.isNotEmpty ? segments.last : null;
+        if (fileName != null) {
+          await Supabase.instance.client.storage.from('avatars').remove([
+            fileName,
+          ]);
+        }
+      }
+      final fileName =
+          'avatar_${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      if (kIsWeb && _selectedImageBytes != null) {
+        await Supabase.instance.client.storage
+            .from('avatars')
+            .uploadBinary(fileName, _selectedImageBytes!);
+      } else if (_selectedImage != null) {
+        await Supabase.instance.client.storage
+            .from('avatars')
+            .upload(fileName, _selectedImage!);
+      }
       final avatarUrl = Supabase.instance.client.storage
           .from('avatars')
           .getPublicUrl(fileName);
-
       return avatarUrl;
     } catch (e) {
       if (mounted) {
@@ -278,9 +344,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         return;
       }
 
-      // Upload avatar if changed
+      // Upload avatar if changed (web/mobile)
       String? avatarUrl = _currentAvatarUrl;
-      if (_selectedImage != null) {
+      if (_selectedImage != null || _selectedImageBytes != null) {
         avatarUrl = await _uploadAvatar();
         if (avatarUrl == null) {
           setState(() => _isLoading = false);
@@ -289,13 +355,16 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       }
 
       // Update profile
-      await Supabase.instance.client.from('profiles').update({
-        'username': _usernameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'bio': _bioController.text.trim(),
-        'avatar_url': avatarUrl,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', user.id);
+      await Supabase.instance.client
+          .from('profiles')
+          .update({
+            'username': _usernameController.text.trim(),
+            'email': _emailController.text.trim(),
+            'bio': _bioController.text.trim(),
+            'avatar_url': avatarUrl,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', user.id);
 
       if (mounted) {
         ToastUtils.showSuccess(
@@ -303,7 +372,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           'Profile updated successfully!',
           icon: Icons.check_circle,
         );
-        context.pop();
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -393,19 +462,35 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                             ),
                           ),
                           child: ClipOval(
-                            child: _selectedImage != null
-                                ? Image.file(
-                                    _selectedImage!,
-                                    fit: BoxFit.cover,
-                                  )
-                                : _currentAvatarUrl != null
-                                    ? Image.network(
-                                        _currentAvatarUrl!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) =>
-                                            _buildDefaultAvatar(),
-                                      )
-                                    : _buildDefaultAvatar(),
+                            child: kIsWeb
+                                ? (_selectedImageBytes != null
+                                      ? Image.memory(
+                                          _selectedImageBytes!,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : _currentAvatarUrl != null
+                                      ? Image.network(
+                                          _currentAvatarUrl!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  _buildDefaultAvatar(),
+                                        )
+                                      : _buildDefaultAvatar())
+                                : (_selectedImage != null
+                                      ? Image.file(
+                                          _selectedImage!,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : _currentAvatarUrl != null
+                                      ? Image.network(
+                                          _currentAvatarUrl!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  _buildDefaultAvatar(),
+                                        )
+                                      : _buildDefaultAvatar()),
                           ),
                         ),
                         if (_isImageLoading)
@@ -478,8 +563,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                       if (value?.trim().isEmpty ?? true) {
                         return 'Email is required';
                       }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                          .hasMatch(value!.trim())) {
+                      if (!RegExp(
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      ).hasMatch(value!.trim())) {
                         return 'Enter a valid email';
                       }
                       return null;
@@ -627,4 +713,4 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       ],
     );
   }
-} 
+}
