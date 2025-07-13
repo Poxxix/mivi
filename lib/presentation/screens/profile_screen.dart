@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:mivi/presentation/widgets/theme_selector_widget.dart';
 import 'package:mivi/data/services/guest_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/widgets.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -12,7 +12,38 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin, RouteAware {
+  RouteObserver<ModalRoute<void>>? _routeObserver;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _routeObserver = GoRouter.of(context)
+        .routerDelegate
+        .navigatorKey
+        .currentState
+        ?.widget
+        .observers
+        .whereType<RouteObserver<ModalRoute<void>>>()
+        .firstOrNull;
+    _routeObserver?.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    _routeObserver?.unsubscribe(this);
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when coming back to this screen
+    if (!_loading && !_isGuest) {
+      _fetchProfile();
+    }
+  }
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -29,20 +60,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       duration: const Duration(milliseconds: 800),
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
     _animationController.forward();
     _checkUserStatus();
   }
@@ -50,7 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   Future<void> _checkUserStatus() async {
     final guestService = GuestService();
     _isGuest = guestService.isGuestMode;
-    
+
     if (_isGuest) {
       // Get guest profile
       _profile = guestService.getGuestProfile();
@@ -65,23 +88,23 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   Future<void> _fetchProfile() async {
     try {
-    final user = Supabase.instance.client.auth.currentUser;
+      final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {
         setState(() {
           _loading = false;
         });
         return;
       }
-      
-    final response = await Supabase.instance.client
-        .from('profiles')
-        .select()
-        .eq('id', user.id)
-        .single();
-    setState(() {
-      _profile = response;
-      _loading = false;
-    });
+
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .single();
+      setState(() {
+        _profile = response;
+        _loading = false;
+      });
     } catch (e) {
       setState(() {
         _loading = false;
@@ -106,16 +129,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     context.go('/register');
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   _animationController.dispose();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     if (_loading) {
       return Scaffold(
         backgroundColor: colorScheme.background,
@@ -228,61 +251,66 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   Widget _buildProfileHeader(ColorScheme colorScheme) {
     return Container(
-                    margin: const EdgeInsets.all(20),
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
         color: colorScheme.surfaceVariant.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-          color: colorScheme.surfaceVariant.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.surfaceVariant.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.grey[200],
+            ),
+            child: _isGuest
+                ? Icon(
+                    Icons.person_outline,
+                    size: 40,
+                    color: colorScheme.onSecondary,
+                  )
+                : (_profile?['avatar_url'] != null &&
+                      _profile?['avatar_url'].toString().isNotEmpty == true)
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.network(
+                      _profile!['avatar_url'],
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.person,
+                        size: 40,
+                        color: colorScheme.onPrimary,
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        // Avatar
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                colors: _isGuest
-                    ? [
-                        colorScheme.secondary,
-                        colorScheme.secondary.withOpacity(0.7),
-                      ]
-                    : [
-                        colorScheme.primary,
-                        colorScheme.primary.withOpacity(0.7),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Icon(
-              _isGuest ? Icons.person_outline : Icons.person,
-                            size: 40,
-              color: _isGuest ? colorScheme.onSecondary : colorScheme.onPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        // User Info
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
+                  )
+                : Icon(Icons.person, size: 40, color: colorScheme.onPrimary),
+          ),
+          const SizedBox(width: 20),
+          // User Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   _profile?['username'] ?? 'Guest User',
-                                style: TextStyle(
+                  style: TextStyle(
                     color: colorScheme.onBackground,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
                 if (_isGuest)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.secondary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -299,14 +327,30 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       ),
                     ),
                   )
-                else
-                              Text(
-                                _profile?['email'] ?? '',
-                                style: TextStyle(
+                else ...[
+                  Text(
+                    _profile?['email'] ?? '',
+                    style: TextStyle(
                       color: colorScheme.onBackground.withOpacity(0.7),
                       fontSize: 14,
-                                ),
-                              ),
+                    ),
+                  ),
+                  if (_profile?['bio'] != null &&
+                      _profile?['bio'].toString().isNotEmpty == true)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        _profile!['bio'],
+                        style: TextStyle(
+                          color: colorScheme.onBackground.withOpacity(0.6),
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
                 const SizedBox(height: 8),
                 if (_isGuest)
                   Text(
@@ -314,22 +358,23 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     style: TextStyle(
                       color: colorScheme.onBackground.withOpacity(0.5),
                       fontSize: 12,
-                                ),
+                    ),
                   )
                 else
                   Text(
                     'Member since ${DateTime.now().year}',
-                                  style: TextStyle(
+                    style: TextStyle(
                       color: colorScheme.onBackground.withOpacity(0.5),
-                                    fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      fontSize: 12,
                     ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
+    // Đã thay thế bằng RouteAware ở phía trên
   }
 
   Widget _buildGuestBenefits(ColorScheme colorScheme) {
@@ -346,9 +391,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.primary.withOpacity(0.2),
-        ),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,10 +421,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               color: colorScheme.onBackground.withOpacity(0.7),
               fontSize: 14,
             ),
-                      ),
+          ),
           const SizedBox(height: 12),
-          ...GuestService().getGuestLimitations().map((limitation) => 
-            Padding(
+          ...GuestService().getGuestLimitations().map(
+            (limitation) => Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
@@ -399,11 +442,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         fontSize: 12,
                       ),
                     ),
-                      ),
-                    ],
                   ),
-                ),
+                ],
               ),
+            ),
+          ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -415,17 +458,15 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                      ),
+                ),
               ),
               icon: const Icon(Icons.account_circle),
               label: const Text(
                 'Create Account',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              ),
+            ),
           ),
-        ),
         ],
       ),
     );
@@ -522,8 +563,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   icon: Icons.person_outline,
                   title: 'Edit Profile',
                   subtitle: 'Update your personal information',
-                  onTap: () {
-                    context.push('/edit-profile');
+                  onTap: () async {
+                    final result = await context.push('/edit-profile');
+                    if (result == true) {
+                      _fetchProfile();
+                    }
                   },
                 ),
                 _buildMenuItem(
@@ -617,42 +661,42 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-          color: enabled 
+        decoration: BoxDecoration(
+          color: enabled
               ? colorScheme.primary.withOpacity(0.1)
               : colorScheme.surfaceVariant.withOpacity(0.3),
           borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-          color: enabled 
+        ),
+        child: Icon(
+          icon,
+          color: enabled
               ? colorScheme.primary
               : colorScheme.onSurface.withOpacity(0.4),
           size: 20,
-                ),
-              ),
+        ),
+      ),
       title: Text(
-                      title,
-                      style: TextStyle(
-          color: enabled 
+        title,
+        style: TextStyle(
+          color: enabled
               ? colorScheme.onSurface
               : colorScheme.onSurface.withOpacity(0.4),
           fontWeight: FontWeight.w500,
-                      ),
-                    ),
+        ),
+      ),
       subtitle: Text(
         enabled ? subtitle : '$subtitle (Account required)',
-                      style: TextStyle(
+        style: TextStyle(
           color: colorScheme.onSurface.withOpacity(0.6),
           fontSize: 12,
-                      ),
-                    ),
+        ),
+      ),
       trailing: Icon(
         Icons.chevron_right,
-        color: enabled 
+        color: enabled
             ? colorScheme.onSurface.withOpacity(0.6)
             : colorScheme.onSurface.withOpacity(0.3),
-        ),
+      ),
       onTap: enabled ? onTap : null,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
     );
