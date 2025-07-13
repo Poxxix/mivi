@@ -47,7 +47,7 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
   }
 
   Future<void> _loadSoundtrack() async {
-    print('🎵 Loading soundtrack for movie ID: ${widget.movieId}, title: ${widget.movieTitle}'); // Debug
+    // Debug: Loading soundtrack for movie ID: ${widget.movieId}, title: ${widget.movieTitle}
     
     setState(() {
       _isLoading = true;
@@ -56,7 +56,7 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
 
     try {
       // Show Last.fm API loading state
-      print('🎵 Fetching from Last.fm API...');
+      // Debug: Fetching from Last.fm API...
       
       // Use the new method with fallback
       final soundtrack = await _soundtrackService.getMovieSoundtrackWithFallback(
@@ -64,15 +64,15 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
         widget.movieTitle
       );
       
-      print('🎵 Soundtrack service returned: ${soundtrack != null ? "NOT NULL" : "NULL"}'); // Debug
+      // Debug: Soundtrack service returned: ${soundtrack != null ? "NOT NULL" : "NULL"}
       if (soundtrack != null) {
-        print('🎵 Soundtrack details: movieId=${soundtrack.movieId}, title="${soundtrack.movieTitle}", tracks=${soundtrack.tracks.length}'); // Debug
+        // Debug: Soundtrack details: movieId=${soundtrack.movieId}, title="${soundtrack.movieTitle}", tracks=${soundtrack.tracks.length}
         if (soundtrack.albumArtUrl != null) {
-          print('🎵 Found album artwork from API');
+          // Debug: Found album artwork from API
         }
         for (int i = 0; i < soundtrack.tracks.length; i++) {
           final track = soundtrack.tracks[i];
-          print('🎵 Track $i: "${track.title}" by "${track.artist}", audioUrl: ${track.audioUrl != null ? "HAS_URL" : "NO_URL"}'); // Debug
+                      // Debug: Track $i: "${track.title}" by "${track.artist}", audioUrl: ${track.audioUrl != null ? "HAS_URL" : "NO_URL"}
         }
       }
       
@@ -81,7 +81,7 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
         _isLoading = false;
       });
     } catch (e) {
-      print('❌ Error loading soundtrack: $e'); // Debug
+              // Debug: Error loading soundtrack: $e
       setState(() {
         _hasError = true;
         _isLoading = false;
@@ -657,7 +657,7 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
 
   // Play track using audio service
   Future<void> _playTrack(SoundtrackTrack track) async {
-    print('🎵 Widget _playTrack called for: "${track.title}"');
+    // Debug: Widget _playTrack called for: "${track.title}"
     
     try {
       // Show loading state
@@ -687,7 +687,7 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
         _searchForTrack(track);
       }
     } catch (e) {
-      print('❌ Widget error playing track: $e');
+      // Debug: Widget error playing track: $e
       if (mounted) {
         ToastUtils.showError(
           context, 

@@ -25,7 +25,7 @@ class GuestService {
       _isGuestMode = prefs.getBool(_guestModeKey) ?? false;
       _hasSeenOnboarding = prefs.getBool(_hasSeenOnboardingKey) ?? false;
     } catch (e) {
-      print('Error initializing guest service: $e');
+      // Debug: Error initializing guest service: $e
       _isGuestMode = false;
       _hasSeenOnboarding = false;
     }

@@ -27,7 +27,7 @@ class AppThemes {
         onError: Color(0xFFFFFFFF),
         surface: Color(0xFF1C1B1F),
         onSurface: Color(0xFFE6E1E5),
-        surfaceVariant: Color(0xFF49454F),
+        surfaceContainerHighest: Color(0xFF49454F),
         onSurfaceVariant: Color(0xFFCAC4D0),
         outline: Color(0xFF938F99),
         shadow: Color(0xFF000000),
@@ -113,7 +113,7 @@ class AppThemes {
         onError: Colors.white,
         surface: Color(0xFFF8FAFC),
         onSurface: Color(0xFF1E293B),
-        surfaceVariant: Color(0xFFF1F5F9),
+        surfaceContainerHighest: Color(0xFFF1F5F9),
         onSurfaceVariant: Color(0xFF64748B),
         outline: Color(0xFFCBD5E1),
         shadow: Color(0xFF000000),
@@ -199,7 +199,7 @@ class AppThemes {
         onError: Colors.white,
         surface: Colors.white,
         onSurface: Color(0xFF111827),
-        surfaceVariant: Color(0xFFFAFAFA),
+        surfaceContainerHighest: Color(0xFFFAFAFA),
         onSurfaceVariant: Color(0xFF6B7280),
         outline: Color(0xFFE5E7EB),
         shadow: Color(0xFF000000),
@@ -310,11 +310,9 @@ class AppThemes {
         onTertiary: Colors.white,
         error: Color(0xFFEF4444),
         onError: Colors.white,
-        background: Color(0xFFFDF2F8), // Very light pink background
-        onBackground: Color(0xFF831843), // Dark pink text
         surface: Color(0xFFFCE7F3), // Light pink surface
         onSurface: Color(0xFF831843),
-        surfaceVariant: Color(0xFFFBBCDE), // Soft pink variant
+        surfaceContainerHighest: Color(0xFFFBBCDE), // Soft pink variant
         onSurfaceVariant: Color(0xFF9D174D),
         outline: Color(0xFFEC4899),
         shadow: Color(0xFF000000),
@@ -430,11 +428,9 @@ class AppThemes {
         onTertiary: Color(0xFFFFFFFF),
         error: Color(0xFFEF4444),
         onError: Color(0xFFFFFFFF),
-        background: Color(0xFF000000), // Pure black
-        onBackground: Color(0xFFE5E7EB),
         surface: Color(0xFF111111), // Very dark gray
         onSurface: Color(0xFFE5E7EB),
-        surfaceVariant: Color(0xFF1F1F1F),
+        surfaceContainerHighest: Color(0xFF1F1F1F),
         onSurfaceVariant: Color(0xFFD1D5DB),
         outline: Color(0xFF6B7280),
         shadow: Color(0xFF000000),
@@ -518,11 +514,9 @@ class AppThemes {
         onTertiary: Color(0xFF000000),
         error: Color(0xFFFF3030),
         onError: Color(0xFF000000),
-        background: Color(0xFF000000), // Pure black for OLED
-        onBackground: Color(0xFFFFFFFF),
         surface: Color(0xFF000000), // Pure black surface
         onSurface: Color(0xFFFFFFFF),
-        surfaceVariant: Color(0xFF0A0A0A), // Slightly gray for differentiation
+        surfaceContainerHighest: Color(0xFF0A0A0A), // Slightly gray for differentiation
         onSurfaceVariant: Color(0xFFE0E0E0),
         outline: Color(0xFF808080),
         shadow: Color(0xFF000000),
