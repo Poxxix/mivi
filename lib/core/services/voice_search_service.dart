@@ -15,11 +15,13 @@ class VoiceSearchService {
   // Stream controllers for listening to voice search events
   final _listeningController = StreamController<bool>.broadcast();
   final _speechResultController = StreamController<String>.broadcast();
+  final _finalResultController = StreamController<String>.broadcast();
   final _errorController = StreamController<String>.broadcast();
 
   // Getters for streams
   Stream<bool> get listeningStream => _listeningController.stream;
   Stream<String> get speechResultStream => _speechResultController.stream;
+  Stream<String> get finalResultStream => _finalResultController.stream;
   Stream<String> get errorStream => _errorController.stream;
 
   // Getters for state
@@ -175,6 +177,7 @@ class VoiceSearchService {
     if (result.finalResult) {
       _isListening = false;
       _listeningController.add(false);
+      _finalResultController.add(_lastWords);
       print('✅ Final speech result: "${_lastWords}"');
     }
   }
@@ -248,6 +251,7 @@ class VoiceSearchService {
   void dispose() {
     _listeningController.close();
     _speechResultController.close();
+    _finalResultController.close();
     _errorController.close();
   }
 } 

@@ -280,7 +280,7 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
                       child: ElevatedButton(
                         onPressed: _playMainTheme,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
+                          backgroundColor: Colors.red, // YouTube red
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -371,15 +371,13 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
                           child: ElevatedButton(
                             onPressed: () => _handleTrackAction(_soundtrack!.tracks[i]),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _soundtrack!.tracks[i].audioUrl != null
-                                ? colorScheme.primary
-                                : colorScheme.outline,
+                              backgroundColor: Colors.red, // Always YouTube red
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(24),
                               ),
                               padding: EdgeInsets.zero,
-                              elevation: _audioService.isCurrentTrack(_soundtrack!.tracks[i]) ? 4 : 2,
+                              elevation: 3, // Consistent elevation
                             ),
                             child: Icon(
                               _getTrackButtonIcon(_soundtrack!.tracks[i]),
@@ -622,36 +620,128 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
 
   // Get appropriate icon for track button
   IconData _getTrackButtonIcon(SoundtrackTrack track) {
-    if (track.audioUrl != null) {
-      // Check if this track is currently playing
-      if (_audioService.isTrackPlaying(track)) {
-        return Icons.pause;
-      } else if (_audioService.isTrackPaused(track)) {
-        return Icons.play_arrow;
-      } else {
-        return Icons.play_arrow;
-      }
-    } else {
-      return Icons.search;
-    }
+    // NEW: Always show YouTube play icon since we prioritize YouTube opening
+    return Icons.play_circle_fill;
+    
+    // OLD CODE: Complex logic for in-app playback
+    // if (track.audioUrl != null) {
+    //   // Check if this track is currently playing
+    //   if (_audioService.isTrackPlaying(track)) {
+    //     return Icons.pause;
+    //   } else if (_audioService.isTrackPaused(track)) {
+    //     return Icons.play_arrow;
+    //   } else {
+    //     return Icons.play_arrow;
+    //   }
+    // } else {
+    //   return Icons.search;
+    // }
   }
 
   // Handle track action (play or search)
   void _handleTrackAction(SoundtrackTrack track) {
     HapticUtils.light();
     
-    if (track.audioUrl != null) {
-      // Handle play/pause for tracks with audio
-      if (_audioService.isTrackPlaying(track)) {
-        _pauseTrack();
-      } else if (_audioService.isTrackPaused(track)) {
-        _resumeTrack();
-      } else {
-        _playTrack(track);
+    // PRIORITY: Always try to open YouTube first (user request)
+    _openTrackOnYouTube(track);
+    
+    // OLD CODE: Only use in-app playback if YouTube fails
+    // if (track.audioUrl != null) {
+    //   // Handle play/pause for tracks with audio
+    //   if (_audioService.isTrackPlaying(track)) {
+    //     _pauseTrack();
+    //   } else if (_audioService.isTrackPaused(track)) {
+    //     _resumeTrack();
+    //   } else {
+    //     _playTrack(track);
+    //   }
+    // } else {
+    //   // Search for the track
+    //   _searchForTrack(track);
+    // }
+  }
+
+  // NEW: Open track directly on YouTube with auto-play
+  void _openTrackOnYouTube(SoundtrackTrack track) async {
+    ToastUtils.showInfo(
+      context,
+      '🎵 Mở YouTube: ${track.title}',
+      icon: Icons.play_circle_fill,
+    );
+    
+    // Try the enhanced YouTube auto-play method first
+    final success = await _soundtrackService.launchYouTubeVideoWithAutoPlay(
+      widget.movieTitle, 
+      track.title
+    );
+    
+    if (!success && mounted) {
+      // Fallback to regular YouTube video launch
+      final fallbackSuccess = await _soundtrackService.launchYouTubeVideo(
+        widget.movieTitle, 
+        track.title
+      );
+      
+      if (!fallbackSuccess && mounted) {
+        // Final fallback to Spotify
+        ToastUtils.showInfo(
+          context,
+          'YouTube không khả dụng, mở Spotify...',
+          icon: Icons.music_note,
+        );
+        
+        if (track.spotifyUrl != null) {
+          await _soundtrackService.launchMusicService(track, 'spotify');
+        } else {
+          ToastUtils.showError(
+            context,
+            'Không thể mở nhạc. Thử lại sau.',
+            icon: Icons.error,
+          );
+        }
       }
-    } else {
-      // Search for the track
-      _searchForTrack(track);
+    }
+  }
+
+  // Search for a specific track (OLD METHOD - now used as fallback)
+  void _searchForTrack(SoundtrackTrack track) async {
+    ToastUtils.showInfo(
+      context,
+      '🎵 Opening YouTube for: ${track.title}',
+      icon: Icons.play_circle_fill,
+    );
+    
+    // Try the enhanced YouTube auto-play method first
+    final success = await _soundtrackService.launchYouTubeVideoWithAutoPlay(
+      widget.movieTitle, 
+      track.title
+    );
+    
+    if (!success && mounted) {
+      // Fallback to regular YouTube video launch
+      final fallbackSuccess = await _soundtrackService.launchYouTubeVideo(
+        widget.movieTitle, 
+        track.title
+      );
+      
+      if (!fallbackSuccess && mounted) {
+        // Final fallback to Spotify
+        ToastUtils.showInfo(
+          context,
+          'YouTube không khả dụng, mở Spotify...',
+          icon: Icons.music_note,
+        );
+        
+        if (track.spotifyUrl != null) {
+          await _soundtrackService.launchMusicService(track, 'spotify');
+        } else {
+          ToastUtils.showError(
+            context,
+            'Không thể mở nhạc. Thử lại sau.',
+            icon: Icons.error,
+          );
+        }
+      }
     }
   }
 
@@ -716,34 +806,6 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
     }
   }
 
-  // Search for a specific track
-  void _searchForTrack(SoundtrackTrack track) async {
-    ToastUtils.showInfo(
-      context,
-      'Opening YouTube Music for: ${track.title}',
-      icon: Icons.play_circle,
-    );
-    
-    // Try to launch YouTube video directly
-    final success = await _soundtrackService.launchYouTubeVideo(
-      widget.movieTitle, 
-      track.title
-    );
-    
-    if (!success && mounted) {
-      // Fallback to Spotify if YouTube fails
-      ToastUtils.showInfo(
-        context,
-        'Opening Spotify search',
-        icon: Icons.music_note,
-      );
-      
-      if (track.spotifyUrl != null) {
-        _soundtrackService.launchMusicService(track, 'spotify');
-      }
-    }
-  }
-
   // Play the main theme track
   void _playMainTheme() {
     HapticUtils.light();
@@ -754,13 +816,17 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
           ? _soundtrack!.mainThemes.first 
           : _soundtrack!.tracks.first;
           
-      if (_audioService.isTrackPlaying(mainTrack)) {
-        _pauseTrack();
-      } else if (_audioService.isTrackPaused(mainTrack)) {
-        _resumeTrack();
-      } else {
-        _playTrack(mainTrack);
-      }
+      // NEW: Always open on YouTube instead of in-app playback
+      _openTrackOnYouTube(mainTrack);
+      
+      // OLD CODE: In-app playback logic
+      // if (_audioService.isTrackPlaying(mainTrack)) {
+      //   _pauseTrack();
+      // } else if (_audioService.isTrackPaused(mainTrack)) {
+      //   _resumeTrack();
+      // } else {
+      //   _playTrack(mainTrack);
+      // }
     } else {
       ToastUtils.showInfo(context, 'No tracks available');
     }
@@ -768,22 +834,26 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
 
   // Get the appropriate icon for the main play button
   IconData _getMainPlayIcon() {
-    if (_soundtrack == null || _soundtrack!.tracks.isEmpty) {
-      return Icons.play_arrow;
-    }
+    // NEW: Always show YouTube play icon
+    return Icons.play_circle_fill;
     
-    // Get main theme track or first track
-    final mainTrack = _soundtrack!.mainThemes.isNotEmpty 
-        ? _soundtrack!.mainThemes.first 
-        : _soundtrack!.tracks.first;
-        
-    if (_audioService.isTrackPlaying(mainTrack)) {
-      return Icons.pause;
-    } else if (_audioService.isTrackPaused(mainTrack)) {
-      return Icons.play_arrow;
-    } else {
-      return Icons.play_arrow;
-    }
+    // OLD CODE: Complex logic for in-app playback
+    // if (_soundtrack == null || _soundtrack!.tracks.isEmpty) {
+    //   return Icons.play_arrow;
+    // }
+    // 
+    // // Get main theme track or first track
+    // final mainTrack = _soundtrack!.mainThemes.isNotEmpty 
+    //     ? _soundtrack!.mainThemes.first 
+    //     : _soundtrack!.tracks.first;
+    //     
+    // if (_audioService.isTrackPlaying(mainTrack)) {
+    //   return Icons.pause;
+    // } else if (_audioService.isTrackPaused(mainTrack)) {
+    //   return Icons.play_arrow;
+    // } else {
+    //   return Icons.play_arrow;
+    // }
   }
 
   // Search on a specific platform
@@ -791,20 +861,28 @@ class _MovieSoundtrackSectionState extends State<MovieSoundtrackSection> {
     HapticUtils.light();
     
     if (platform == 'youtube') {
-      // For YouTube, try to get first video directly
+      // For YouTube, use enhanced auto-play method
       ToastUtils.showInfo(
         context, 
-        'Opening YouTube Music...',
-        icon: Icons.play_circle,
+        '🎬 Opening YouTube with auto-play...',
+        icon: Icons.play_circle_fill,
       );
       
-      final success = await _soundtrackService.launchYouTubeVideo(
+      final success = await _soundtrackService.launchYouTubeVideoWithAutoPlay(
         widget.movieTitle, 
         'soundtrack'
       );
       
       if (!success && mounted) {
-        ToastUtils.showError(context, 'Could not open YouTube');
+        // Fallback to regular YouTube
+        final fallbackSuccess = await _soundtrackService.launchYouTubeVideo(
+          widget.movieTitle, 
+          'soundtrack'
+        );
+        
+        if (!fallbackSuccess && mounted) {
+          ToastUtils.showError(context, 'Could not open YouTube');
+        }
       }
     } else {
       // For other platforms, use regular search

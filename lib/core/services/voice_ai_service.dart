@@ -22,12 +22,14 @@ class VoiceAIService {
   // Stream controllers for voice events
   final _listeningController = StreamController<bool>.broadcast();
   final _speechResultController = StreamController<String>.broadcast();
+  final _finalResultController = StreamController<String>.broadcast();
   final _speakingController = StreamController<bool>.broadcast();
   final _errorController = StreamController<String>.broadcast();
 
   // Getters for streams
   Stream<bool> get listeningStream => _listeningController.stream;
   Stream<String> get speechResultStream => _speechResultController.stream;
+  Stream<String> get finalResultStream => _finalResultController.stream;
   Stream<bool> get speakingStream => _speakingController.stream;
   Stream<String> get errorStream => _errorController.stream;
 
@@ -250,7 +252,10 @@ class VoiceAIService {
       // Clean text for better speech
       final cleanText = _cleanTextForSpeech(text);
       
-      print('🔊 Speaking: "$cleanText"');
+      // Use safe UTF-8 printing to avoid console errors
+      final safeText = _makeSafeForPrinting(cleanText);
+      print('🔊 Speaking: "$safeText"');
+      
       await _tts.speak(cleanText);
       return true;
     } catch (e) {
@@ -276,8 +281,26 @@ class VoiceAIService {
 
   /// Clean text for better speech synthesis
   String _cleanTextForSpeech(String text) {
-    // Remove emojis and special characters
-    String cleaned = text.replaceAll(RegExp(r'[🎬🤖✨🎥🍿🎭🎪🎯🔥⭐🎊🎉🎈🎁🎀🎃🎄🎆🎇🌟⚡💫🌈🌊🏆🥇🎖️🏅]'), '');
+    // First, handle any invalid UTF-8 sequences
+    String cleaned = _sanitizeUtf8(text);
+    
+    // Remove all emojis and pictographs using Unicode categories
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{1F600}-\u{1F64F}]', unicode: true), ''); // Emoticons
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{1F300}-\u{1F5FF}]', unicode: true), ''); // Misc symbols
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{1F680}-\u{1F6FF}]', unicode: true), ''); // Transport & Map
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{1F700}-\u{1F77F}]', unicode: true), ''); // Alchemical symbols
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{1F780}-\u{1F7FF}]', unicode: true), ''); // Geometric shapes
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{1F800}-\u{1F8FF}]', unicode: true), ''); // Supplemental arrows
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{1F900}-\u{1F9FF}]', unicode: true), ''); // Supplemental symbols
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{1FA00}-\u{1FA6F}]', unicode: true), ''); // Chess symbols
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{1FA70}-\u{1FAFF}]', unicode: true), ''); // Symbols and pictographs
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{2600}-\u{26FF}]', unicode: true), ''); // Misc symbols
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{2700}-\u{27BF}]', unicode: true), ''); // Dingbats
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{FE00}-\u{FE0F}]', unicode: true), ''); // Variation selectors
+    cleaned = cleaned.replaceAll(RegExp(r'[\u{1F1E6}-\u{1F1FF}]', unicode: true), ''); // Flags
+    
+    // Remove other problematic characters
+    cleaned = cleaned.replaceAll(RegExp(r'[^\x20-\x7E\u00A0-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]'), '');
     
     // Replace markdown-style formatting
     cleaned = cleaned.replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'\1'); // Bold
@@ -289,6 +312,38 @@ class VoiceAIService {
     cleaned = cleaned.trim();
     
     return cleaned;
+  }
+
+  /// Sanitize UTF-8 string by removing invalid sequences
+  String _sanitizeUtf8(String text) {
+    try {
+      // Convert to bytes and back to remove invalid UTF-8 sequences
+      final bytes = text.codeUnits;
+      final cleanBytes = <int>[];
+      
+      for (int i = 0; i < bytes.length; i++) {
+        final byte = bytes[i];
+        // Keep valid UTF-16 code units (avoid surrogate pairs issues)
+        if (byte >= 0x20 && byte <= 0xD7FF || byte >= 0xE000 && byte <= 0xFFFD) {
+          cleanBytes.add(byte);
+        }
+      }
+      
+      return String.fromCharCodes(cleanBytes);
+    } catch (e) {
+      // If sanitization fails, return a safe fallback
+      return text.replaceAll(RegExp(r'[^\x20-\x7E]'), '');
+    }
+  }
+
+  /// Make text safe for console printing by removing problematic characters
+  String _makeSafeForPrinting(String text) {
+    try {
+      // Remove any remaining problematic characters for console output
+      return text.replaceAll(RegExp(r'[^\x20-\x7E\u00A0-\u00FF]'), '');
+    } catch (e) {
+      return 'Text contains invalid characters';
+    }
   }
 
   /// Get available locales for speech recognition
@@ -348,6 +403,7 @@ class VoiceAIService {
     if (result.finalResult) {
       _isListening = false;
       _listeningController.add(false);
+      _finalResultController.add(_lastWords);
       print('✅ Final speech result: "${_lastWords}"');
     }
   }
@@ -443,6 +499,7 @@ class VoiceAIService {
   void dispose() {
     _listeningController.close();
     _speechResultController.close();
+    _finalResultController.close();
     _speakingController.close();
     _errorController.close();
     
@@ -475,4 +532,4 @@ class VoiceAIService {
       'lastWords': _lastWords,
     };
   }
-} 
+}
