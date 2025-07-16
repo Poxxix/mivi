@@ -15,20 +15,22 @@ import 'package:mivi/data/services/guest_service.dart';
 import 'package:mivi/presentation/screens/ai_chat_screen.dart';
 import 'package:mivi/presentation/widgets/floating_ai_chat.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:mivi/presentation/screens/change_password_screen.dart';
 
 class AppRouter {
   static final GuestService _guestService = GuestService();
-  
+
   static final router = GoRouter(
     initialLocation: '/loading',
     redirect: (context, state) async {
       // Initialize guest service
       await _guestService.initialize();
-      
+
       final isLoggedIn = Supabase.instance.client.auth.currentUser != null;
       final isGuestMode = _guestService.isGuestMode;
-      final isAuthRoute = state.matchedLocation == '/login' || 
-                         state.matchedLocation == '/register';
+      final isAuthRoute =
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register';
       final isLoadingRoute = state.matchedLocation == '/loading';
 
       // If on loading route, redirect based on auth status
@@ -59,10 +61,7 @@ class AppRouter {
         builder: (context, state) => const LoadingScreen(),
       ),
       // Auth routes
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
@@ -73,10 +72,7 @@ class AppRouter {
           return ScaffoldWithBottomNav(child: child);
         },
         routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) => const HomeScreen(),
-          ),
+          GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
           GoRoute(
             path: '/search',
             builder: (context, state) => const SearchScreen(),
@@ -93,12 +89,17 @@ class AppRouter {
             path: '/edit-profile',
             builder: (context, state) => const EditProfileScreen(),
           ),
+          GoRoute(
+            path: '/change-password',
+            builder: (context, state) => const ChangePasswordScreen(),
+          ),
         ],
       ),
       GoRoute(
         path: '/movie/:id',
         builder: (context, state) {
-          final movie = state.extra as Movie? ?? 
+          final movie =
+              state.extra as Movie? ??
               MockMovies.movies.firstWhere(
                 (m) => m.id.toString() == state.pathParameters['id'],
                 orElse: () => MockMovies.movies.first,
@@ -122,7 +123,7 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
       backgroundColor: colorScheme.background,
       body: Center(
@@ -151,9 +152,7 @@ class LoadingScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            CircularProgressIndicator(
-              color: colorScheme.primary,
-            ),
+            CircularProgressIndicator(color: colorScheme.primary),
             const SizedBox(height: 16),
             Text(
               'Loading...',
@@ -177,12 +176,9 @@ class ScaffoldWithBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
-      body: FloatingAIChatProvider(
-        child: child,
-        showFloatingChat: true,
-      ),
+      body: FloatingAIChatProvider(child: child, showFloatingChat: true),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,
@@ -212,26 +208,26 @@ class ScaffoldWithBottomNav extends StatelessWidget {
           onTap: (int index) => _onItemTapped(index, context),
           items: [
             BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
+              icon: Icon(Icons.home_outlined),
               activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
+              label: 'Home',
+            ),
             BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
+              icon: Icon(Icons.search_outlined),
               activeIcon: Icon(Icons.search),
-            label: 'Search',
-          ),
+              label: 'Search',
+            ),
             BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline),
+              icon: Icon(Icons.favorite_outline),
               activeIcon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
+              label: 'Favorites',
+            ),
             BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
+              icon: Icon(Icons.person_outline),
               activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+              label: 'Profile',
+            ),
+          ],
         ),
       ),
     );
@@ -267,4 +263,4 @@ class ScaffoldWithBottomNav extends StatelessWidget {
         break;
     }
   }
-} 
+}
