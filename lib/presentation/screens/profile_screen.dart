@@ -572,6 +572,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
                 _buildMenuItem(
                   colorScheme,
+                  icon: Icons.lock_outline,
+                  title: 'Change Password',
+                  subtitle: 'Update your login password',
+                  onTap: () async {
+                    final result = await context.push('/change-password');
+                    if (result == true) {
+                      // optionally show dialog or refresh user
+                    }
+                  },
+                ),
+                _buildMenuItem(
+                  colorScheme,
                   icon: Icons.security_outlined,
                   title: 'Privacy & Security',
                   subtitle: 'Manage your privacy settings',
