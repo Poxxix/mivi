@@ -42,6 +42,7 @@ class _AIChatScreenState extends State<AIChatScreen>
   bool _isSpeaking = false;
   StreamSubscription<bool>? _listeningSubscription;
   StreamSubscription<String>? _speechResultSubscription;
+  StreamSubscription<String>? _finalResultSubscription;
   StreamSubscription<bool>? _speakingSubscription;
   StreamSubscription<String>? _voiceErrorSubscription;
 
@@ -80,6 +81,7 @@ class _AIChatScreenState extends State<AIChatScreen>
     // Clean up voice subscriptions
     _listeningSubscription?.cancel();
     _speechResultSubscription?.cancel();
+    _finalResultSubscription?.cancel();
     _speakingSubscription?.cancel();
     _voiceErrorSubscription?.cancel();
     _voiceAIService.dispose();
@@ -124,6 +126,12 @@ class _AIChatScreenState extends State<AIChatScreen>
         setState(() {
           _messageController.text = result;
         });
+      }
+    });
+
+    _finalResultSubscription = _voiceAIService.finalResultStream.listen((result) {
+      if (mounted && result.trim().isNotEmpty) {
+        _sendMessage(result);
       }
     });
 
@@ -204,10 +212,10 @@ class _AIChatScreenState extends State<AIChatScreen>
       // Save AI message to history
       _historyService.addMessage(aiMessage);
 
-      // Speak AI response if voice is enabled
-      if (_voiceAIService.isInitialized && aiResponse.content.isNotEmpty) {
-        _voiceAIService.speak(aiResponse.content);
-      }
+      // No more AI speaking - removed TTS functionality
+      // if (_voiceAIService.isInitialized && aiResponse.content.isNotEmpty) {
+      //   _voiceAIService.speak(aiResponse.content);
+      // }
 
       _scrollToBottom();
     } catch (e) {

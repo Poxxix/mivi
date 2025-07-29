@@ -42,7 +42,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         throw 'No user logged in.';
       }
 
-      // ✅ Bước 1: Đăng nhập lại để xác thực mật khẩu cũ
+      
       final signInResponse = await supabase.auth.signInWithPassword(
         email: email,
         password: _oldPasswordController.text,
@@ -50,8 +50,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
       if (signInResponse.user == null) {
         throw 'Current password is incorrect.';
-      }
-
+  
       final updateResponse = await supabase.auth.updateUser(
         UserAttributes(password: _newPasswordController.text),
       );

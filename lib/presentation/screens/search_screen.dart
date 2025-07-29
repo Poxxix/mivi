@@ -35,6 +35,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   bool _isListening = false;
   StreamSubscription<bool>? _listeningSubscription;
   StreamSubscription<String>? _speechResultSubscription;
+  StreamSubscription<String>? _finalResultSubscription;
   StreamSubscription<String>? _errorSubscription;
 
   // Filter properties
@@ -114,6 +115,11 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
           _controller.text = result;
           _query = result;
         });
+      }
+    });
+
+    _finalResultSubscription = _voiceSearchService.finalResultStream.listen((result) {
+      if (mounted && result.trim().isNotEmpty) {
         _onSearchChanged(result);
       }
     });
@@ -237,6 +243,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     // Clean up voice search
     _listeningSubscription?.cancel();
     _speechResultSubscription?.cancel();
+    _finalResultSubscription?.cancel();
     _errorSubscription?.cancel();
     _voiceSearchService.cancel();
     

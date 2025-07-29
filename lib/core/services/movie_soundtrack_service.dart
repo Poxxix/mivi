@@ -1261,13 +1261,43 @@ class MovieSoundtrackService {
     final encodedQuery = Uri.encodeComponent(query);
     return 'https://music.youtube.com/search?q=$encodedQuery';
   }
+
+  /// Generate YouTube App URL for direct video opening (NEW)
+  String generateYouTubeAppUrl(String movieTitle, String trackTitle) {
+    final query = '$movieTitle $trackTitle soundtrack';
+    final encodedQuery = Uri.encodeComponent(query);
+    
+    // YouTube app URL scheme with auto-play intent
+    return 'youtube://results?search_query=$encodedQuery';
+  }
+
+  /// Generate YouTube web URL with auto-play parameters (NEW)
+  String generateYouTubeAutoPlayUrl(String movieTitle, String trackTitle) {
+    final query = '$movieTitle $trackTitle soundtrack';
+    final encodedQuery = Uri.encodeComponent(query);
+    
+    // YouTube web URL with parameters to encourage auto-play of first result
+    return 'https://www.youtube.com/results?search_query=$encodedQuery&sp=EgIQAQ%253D%253D&gl=US&hl=en';
+  }
   
   /// Launch YouTube with smart URL that aims for first result
   Future<bool> launchYouTubeVideo(String movieTitle, String trackTitle) async {
     try {
       print('🎬 Opening YouTube for: $movieTitle - $trackTitle');
       
-      // Try YouTube Music first (better for soundtrack discovery)
+      // PRIORITY 1: Try YouTube app URL for direct opening
+      final appUrl = generateYouTubeAppUrl(movieTitle, trackTitle);
+      final appUri = Uri.parse(appUrl);
+      
+      if (await canLaunchUrl(appUri)) {
+        final success = await launchUrl(appUri, mode: LaunchMode.externalApplication);
+        if (success) {
+          print('✅ Opened YouTube app directly');
+          return true;
+        }
+      }
+      
+      // PRIORITY 2: Try YouTube Music (better for soundtrack discovery)
       final musicUrl = generateYouTubeMusicUrl(movieTitle, trackTitle);
       final musicUri = Uri.parse(musicUrl);
       
@@ -1279,7 +1309,19 @@ class MovieSoundtrackService {
         }
       }
       
-      // Fallback to regular YouTube search
+      // PRIORITY 3: Fallback to web YouTube with auto-play parameters
+      final autoPlayUrl = generateYouTubeAutoPlayUrl(movieTitle, trackTitle);
+      final autoPlayUri = Uri.parse(autoPlayUrl);
+      
+      if (await canLaunchUrl(autoPlayUri)) {
+        final success = await launchUrl(autoPlayUri, mode: LaunchMode.externalApplication);
+        if (success) {
+          print('✅ Opened YouTube web with auto-play');
+          return true;
+        }
+      }
+      
+      // PRIORITY 4: Final fallback to regular YouTube search
       final searchUrl = generateYouTubeFirstVideoUrl(movieTitle, trackTitle);
       final searchUri = Uri.parse(searchUrl);
       
@@ -1291,6 +1333,59 @@ class MovieSoundtrackService {
       
     } catch (e) {
       print('❌ Error launching YouTube: $e');
+    }
+    
+    return false;
+  }
+
+  /// NEW: Launch YouTube with direct video play (Enhanced)
+  Future<bool> launchYouTubeVideoWithAutoPlay(String movieTitle, String trackTitle) async {
+    try {
+      print('🎬🎵 Auto-launching YouTube video for: $movieTitle - $trackTitle');
+      
+      // Method 1: YouTube app deep link
+      final appUrl = 'youtube://results?search_query=${Uri.encodeComponent('$movieTitle $trackTitle soundtrack')}';
+      try {
+        final appUri = Uri.parse(appUrl);
+        if (await canLaunchUrl(appUri)) {
+          await launchUrl(appUri, mode: LaunchMode.externalApplication);
+          print('✅ Opened YouTube app with deep link');
+          return true;
+        }
+      } catch (e) {
+        print('🔄 YouTube app not available, trying web...');
+      }
+      
+      // Method 2: YouTube Music with better targeting
+      final musicQuery = '$movieTitle $trackTitle';
+      final musicUrl = 'https://music.youtube.com/search?q=${Uri.encodeComponent(musicQuery)}';
+      try {
+        final musicUri = Uri.parse(musicUrl);
+        if (await canLaunchUrl(musicUri)) {
+          await launchUrl(musicUri, mode: LaunchMode.externalApplication);
+          print('✅ Opened YouTube Music');
+          return true;
+        }
+      } catch (e) {
+        print('🔄 YouTube Music failed, trying regular YouTube...');
+      }
+      
+      // Method 3: YouTube web with enhanced parameters
+      final webQuery = '$movieTitle $trackTitle soundtrack';
+      final webUrl = 'https://www.youtube.com/results?search_query=${Uri.encodeComponent(webQuery)}&sp=EgIQAQ%253D%253D';
+      try {
+        final webUri = Uri.parse(webUrl);
+        if (await canLaunchUrl(webUri)) {
+          await launchUrl(webUri, mode: LaunchMode.externalApplication);
+          print('✅ Opened YouTube web');
+          return true;
+        }
+      } catch (e) {
+        print('❌ All YouTube launch methods failed');
+      }
+      
+    } catch (e) {
+      print('❌ Error in launchYouTubeVideoWithAutoPlay: $e');
     }
     
     return false;
