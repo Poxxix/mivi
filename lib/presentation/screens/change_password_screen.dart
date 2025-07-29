@@ -50,9 +50,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
       if (signInResponse.user == null) {
         throw 'Current password is incorrect.';
-      }
-
-      
+  
       final updateResponse = await supabase.auth.updateUser(
         UserAttributes(password: _newPasswordController.text),
       );
