@@ -135,6 +135,90 @@ class _ProfileScreenState extends State<ProfileScreen>
   //   super.dispose();
   // }
 
+  void _confirmAndDeleteAccount() async {
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận xóa tài khoản'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Nhập lại mật khẩu để xác nhận bạn là chủ tài khoản. Việc xóa tài khoản là vĩnh viễn và không thể khôi phục.',
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Mật khẩu'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Vui lòng nhập mật khẩu';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                Navigator.of(context).pop(true);
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Xác nhận xóa'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      _reAuthenticateAndDelete(passwordController.text.trim());
+    }
+  }
+
+  Future<void> _reAuthenticateAndDelete(String password) async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    if (user == null || user.email == null) return;
+
+    try {
+      final response = await supabase.auth.signInWithPassword(
+        email: user.email!,
+        password: password,
+      );
+
+      if (response.user == null) {
+        throw Exception("Sai mật khẩu");
+      }
+
+      await supabase
+          .from('profiles')
+          .update({'is_deleted': true})
+          .eq('id', user.id);
+
+      await supabase.auth.signOut();
+
+      if (mounted) context.go('/login');
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Xóa tài khoản thất bại: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -581,6 +665,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                       // optionally show dialog or refresh user
                     }
                   },
+                ),
+                _buildMenuItem(
+                  colorScheme,
+                  icon: Icons.delete_outline,
+                  title: 'Delete Account',
+                  subtitle: 'Delete your account permanently',
+                  onTap: _confirmAndDeleteAccount,
                 ),
                 _buildMenuItem(
                   colorScheme,

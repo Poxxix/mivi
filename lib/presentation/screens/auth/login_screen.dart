@@ -52,15 +52,33 @@ class _LoginScreenState extends State<LoginScreen>
       setState(() => _isLoading = true);
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
+
       try {
         final response = await Supabase.instance.client.auth.signInWithPassword(
           email: email,
           password: password,
         );
+
         if (response.user != null) {
-          // Exit guest mode when user logs in
-          await GuestService().exitGuestMode();
-          if (mounted) context.go('/');
+          final profile = await Supabase.instance.client
+              .from('profiles')
+              .select('is_deleted')
+              .eq('id', response.user!.id)
+              .maybeSingle();
+
+          if (profile != null && profile['is_deleted'] == true) {
+            await Supabase.instance.client.auth.signOut();
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tài khoản của bạn đã bị xóa.')),
+              );
+            }
+            return;
+          } else {
+            await GuestService().exitGuestMode();
+            if (mounted) context.go('/');
+          }
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -88,7 +106,6 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  //login google
   Future<void> _handleGoogleLogin() async {
     setState(() => _isLoading = true);
     try {
@@ -97,21 +114,29 @@ class _LoginScreenState extends State<LoginScreen>
         redirectTo: 'http://localhost:55559/',
         queryParams: {'prompt': 'select_account'},
       );
-      // Người dùng sẽ được chuyển hướng sang Google và quay lại sau khi đăng nhập
-    } on AuthException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Google Sign-In thất bại: [${e.message}]')),
-        );
+
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final profile = await Supabase.instance.client
+            .from('profiles')
+            .select('is_deleted')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profile != null && profile['is_deleted'] == true) {
+          await Supabase.instance.client.auth.signOut();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Tài khoản đã bị xóa.')),
+            );
+          }
+          return;
+        }
+
+        if (mounted) context.go('/');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Lỗi không xác định khi Google Sign-In!'),
-          ),
-        );
-      }
+      // lỗi như cũ
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
